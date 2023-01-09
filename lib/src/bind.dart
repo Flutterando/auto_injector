@@ -1,6 +1,9 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
+
 import 'param.dart';
 
 enum BindType {
+  instance,
   factory,
   singleton,
   lazySingleton;
@@ -13,19 +16,75 @@ enum BindType {
 class Bind {
   final Function constructor;
   final BindType type;
-  late final List<Param> params;
-  late final String className;
+  final List<Param> params;
+  final String className;
+  final String tag;
+  final Object? instance;
 
-  Bind({
+  bool get hasInstance => instance != null;
+
+  Bind._({
     required this.constructor,
     required this.type,
-  }) {
-    final constructorString = constructor.runtimeType.toString();
-    className = _resolveClassName(constructorString);
-    params = _extractParams(constructorString);
+    required this.params,
+    required this.className,
+    required this.tag,
+    this.instance,
+  });
+
+  static Bind withInstance<T>(
+    T instance,
+    String tag,
+  ) {
+    return Bind._(
+      constructor: () => instance,
+      className: T.toString(),
+      params: [],
+      tag: tag,
+      type: BindType.instance,
+    );
   }
 
-  List<Param> _extractParams(String constructorString) {
+  factory Bind({
+    required Function constructor,
+    required BindType type,
+    required String tag,
+  }) {
+    final constructorString = constructor.runtimeType.toString();
+    final className = _resolveClassName(constructorString);
+    final params = _extractParams(constructorString);
+    return Bind._(
+      constructor: constructor,
+      className: className,
+      params: params,
+      tag: tag,
+      type: type,
+    );
+  }
+
+  Bind removeInstance() {
+    return Bind._(
+      constructor: constructor,
+      type: type,
+      params: params,
+      className: className,
+      tag: tag,
+      instance: null,
+    );
+  }
+
+  Bind addInstance(dynamic instance) {
+    return Bind._(
+      constructor: constructor,
+      type: type,
+      params: params,
+      className: className,
+      tag: tag,
+      instance: instance,
+    );
+  }
+
+  static List<Param> _extractParams(String constructorString) {
     final params = <Param>[];
 
     if (constructorString.startsWith('() => ')) {
@@ -81,7 +140,7 @@ class Bind {
     return params;
   }
 
-  String _resolveClassName<T>(String constructorString) {
+  static String _resolveClassName<T>(String constructorString) {
     final className = constructorString.split(' => ').last;
     return className;
   }

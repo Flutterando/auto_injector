@@ -28,6 +28,9 @@ void main(){
     // instance
     autoInjector.instance('Instance');
 
+    // Inform that you have finished adding instances
+    autoInjector.commit();
+
     // fetch
     final controller = autoInjector.get<Controller>();
     print(controller); // Instance of 'Controller'.
@@ -55,6 +58,18 @@ class Datasource {}
 
 ```
 
+## Dispose Singleton
+
+Singletons can be terminated on request using the `disposeSingleton` method returning
+the instance for executing the dispose routine.
+
+```dart
+
+final deadInstance = autoInjector.disposeSingleton<MyController>();
+deadInstance.close();
+
+```
+
 ## Modularization
 
 For projects with multiple scopes, try uniting the instances by naming them Module or Container.
@@ -64,9 +79,11 @@ With this, you can register specific instances for each module.
 
 // app_module.dart
 final appModule = AutoInjector(
+  tag: 'AppModule',
   on: (i) {
     i.addInjector(productModule);
     i.addInjector(userModule);
+    i.commit();
   },
 );
 
@@ -74,6 +91,7 @@ final appModule = AutoInjector(
 
 // product_module.dart
 final productModule = AutoInjector(
+  tag: 'ProductModule',
   on: (i) {
     i.addInstance(1);
   },
@@ -83,6 +101,7 @@ final productModule = AutoInjector(
 
 // user_module.dart
 final userModule = AutoInjector(
+  tag: 'UserModule',
   on: (i) {
     i.addInstance(true);
   },
@@ -95,6 +114,15 @@ void main() {
   print(appModule.get<bool>());
 }
 
+```
+
+Também é possível remover todos os singletons de uma tag específica usando o método
+`disposeSingletonsByTag` que informa cada instância removida atraves de uma função anônima:
+
+```dart
+autoInjector.disposeSingletonsByTag('ProductModule', (instance){
+  // individual dispose routine
+});
 ```
 
 ## Param Transform

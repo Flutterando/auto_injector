@@ -16,10 +16,19 @@ void main() {
     expect(injector.isAdded<TestDatasource>(), true);
   });
 
+  test('AutoInjector: add after commit throw exception', () async {
+    injector.add(TestDatasource.new);
+    injector.commit();
+
+    expect(() => injector.add(TestDatasource.new),
+        throwsA(isA<AutoInjectorException>()));
+  });
+
   test('AutoInjector: addInstance', () async {
     expect(injector.isAdded<String>(), false);
 
     injector.addInstance('Test');
+    injector.commit();
 
     expect(injector.isAdded<String>(), true);
 
@@ -31,6 +40,7 @@ void main() {
     expect(injector.isInstantiateSingleton<TestDatasource>(), false);
 
     injector.addSingleton(TestDatasource.new);
+    injector.commit();
 
     expect(injector.isAdded<TestDatasource>(), true);
     expect(injector.isInstantiateSingleton<TestDatasource>(), true);
@@ -41,21 +51,12 @@ void main() {
     expect(value1, value2);
   });
 
-  test('AutoInjector: addSingleton throw error when added first', () async {
-    try {
-      injector.addSingleton(TestRepository.new);
-      injector.add(TestDatasource.new);
-    } on AutoInjectorException catch (e) {
-      expect(e.message, '''Singleton instances need to be added last.
-Add `TestRepository` at the end or use `addLazySingleton`''');
-    }
-  });
-
   test('AutoInjector: addLazySingleton', () async {
     expect(injector.isAdded<TestDatasource>(), false);
     expect(injector.isInstantiateSingleton<TestDatasource>(), false);
 
     injector.addLazySingleton(TestDatasource.new);
+    injector.commit();
 
     expect(injector.isAdded<TestDatasource>(), true);
     expect(injector.isInstantiateSingleton<TestDatasource>(), false);
@@ -73,31 +74,28 @@ Add `TestRepository` at the end or use `addLazySingleton`''');
     expect(injector.isInstantiateSingleton<TestDatasource>(), false);
 
     injector.addSingleton(TestDatasource.new);
+    injector.commit();
 
     expect(injector.isAdded<TestDatasource>(), true);
     expect(injector.isInstantiateSingleton<TestDatasource>(), true);
 
-    injector.disposeSingleton<TestDatasource>();
+    final instance = injector.disposeSingleton<TestDatasource>();
+    expect(instance, isA<TestDatasource>());
+    expect(injector.isAdded<TestDatasource>(), true);
     expect(injector.isInstantiateSingleton<TestDatasource>(), false);
   });
 
   test('Invalid added again', () {
     injector.add<TestDatasource>(TestDatasource.new);
 
-    expect(() => injector.add(TestDatasource.new), throwsA(isA<AutoInjectorException>()));
-  });
-
-  test('AutoInjector: remove', () async {
-    injector.add<TestDatasource>(TestDatasource.new);
-    expect(injector.isAdded<TestDatasource>(), true);
-    injector.remove<TestDatasource>();
-
-    expect(injector.isAdded<TestDatasource>(), false);
+    expect(() => injector.add(TestDatasource.new),
+        throwsA(isA<AutoInjectorException>()));
   });
 
   group('AutoInjector: get', () {
     test('zero input', () {
       injector.add<TestDatasource>(TestDatasource.new);
+      injector.commit();
 
       expect(injector.get<TestDatasource>(), isA<TestDatasource>());
     });
@@ -105,6 +103,7 @@ Add `TestRepository` at the end or use `addLazySingleton`''');
     test('Get instance with named params nullable', () {
       injector.add(TestRepository.new);
       injector.add(TestDatasource.new);
+      injector.commit();
 
       expect(injector.get<TestRepository>(), isA<TestRepository>());
     });
@@ -113,6 +112,7 @@ Add `TestRepository` at the end or use `addLazySingleton`''');
       injector.add(TestRepository.new);
       injector.add(TestDatasource.new);
       injector.addInstance('Test');
+      injector.commit();
 
       expect(injector.get<TestRepository>(), isA<TestRepository>());
     });
@@ -122,6 +122,7 @@ Add `TestRepository` at the end or use `addLazySingleton`''');
       injector.add(TestRepository.new);
       injector.add(TestDatasource.new);
       injector.addInstance('Test');
+      injector.commit();
 
       expect(injector.get<TestController>(), isA<TestController>());
     });
@@ -129,6 +130,7 @@ Add `TestRepository` at the end or use `addLazySingleton`''');
     test('Error when get not registred instance', () {
       try {
         injector.get<TestDatasource>();
+        throw Exception('error');
       } on NotRegistredInstance catch (e) {
         expect(e.message, 'TestDatasource not registred.');
       }
@@ -137,22 +139,27 @@ Add `TestRepository` at the end or use `addLazySingleton`''');
     test('Error when get not registred instance, 2 traces', () {
       injector.add(TestController.new);
       injector.add(TestRepository.new);
+      injector.commit();
 
       try {
         injector.get<TestRepository>();
+        throw 'error';
       } on NotRegistredInstance catch (e) {
-        expect(e.message, 'TestDatasource not registred.\nTrace: TestRepository->TestDatasource');
+        expect(e.message,
+            'TestDatasource not registred.\nTrace: TestRepository->TestDatasource');
       }
     });
 
     test('Error when get not registred instance, 3 traces', () {
       injector.add(TestController.new);
       injector.add(TestRepository.new);
-
+      injector.commit();
       try {
         injector.get<TestController>();
+        throw 'error';
       } on NotRegistredInstance catch (e) {
-        expect(e.message, 'TestDatasource not registred.\nTrace: TestController->TestRepository->TestDatasource');
+        expect(e.message,
+            'TestDatasource not registred.\nTrace: TestController->TestRepository->TestDatasource');
       }
     });
   });
@@ -160,6 +167,7 @@ Add `TestRepository` at the end or use `addLazySingleton`''');
   group('replaceInstance', () {
     test('change', () {
       injector.addInstance('Text');
+      injector.commit();
       expect(injector.get<String>(), 'Text');
 
       injector.replaceInstance<String>('Changed');
@@ -168,7 +176,8 @@ Add `TestRepository` at the end or use `addLazySingleton`''');
     });
 
     test('Throw AutoInjectorException when have no added before', () {
-      expect(() => injector.replaceInstance<String>('Changed'), throwsA(isA<AutoInjectorException>()));
+      expect(() => injector.replaceInstance<String>('Changed'),
+          throwsA(isA<AutoInjectorException>()));
     });
   });
 
@@ -186,6 +195,7 @@ Add `TestRepository` at the end or use `addLazySingleton`''');
       ]);
 
       injector.add(TestRepository.new);
+      injector.commit();
 
       expect(injector.get<TestRepository>(), isA<TestRepository>());
     });
@@ -202,9 +212,42 @@ Add `TestRepository` at the end or use `addLazySingleton`''');
 
       injector.addInjector(injectorOther);
 
+      injector.commit();
+
       expect(injector.get<String>(), 'Text');
       expect(injector.get<int>(), 1);
       expect(injector.get<TestDatasource>(), isA<TestDatasource>());
+    });
+  });
+
+  group('disposeSingletonsByTag', () {
+    test('2 tagged instances', () {
+      injector.addSingleton(() => 'test', tag: 'tag1');
+      injector.addSingleton(() => true, tag: 'tag1');
+      injector.addSingleton(() => 1);
+      injector.commit();
+
+      expect(injector.isInstantiateSingleton<String>(), true);
+      expect(injector.isInstantiateSingleton<bool>(), true);
+      expect(injector.isInstantiateSingleton<int>(), true);
+
+      expect(injector.isAdded<String>(), true);
+      expect(injector.isAdded<bool>(), true);
+      expect(injector.isAdded<int>(), true);
+
+      final disposed = [];
+
+      injector.disposeSingletonsByTag('tag1', onRemoved: disposed.add);
+
+      expect(disposed, ['test', true]);
+
+      expect(injector.isInstantiateSingleton<String>(), false);
+      expect(injector.isInstantiateSingleton<bool>(), false);
+      expect(injector.isInstantiateSingleton<int>(), true);
+
+      expect(injector.isAdded<String>(), true);
+      expect(injector.isAdded<bool>(), true);
+      expect(injector.isAdded<int>(), true);
     });
   });
 
@@ -214,6 +257,7 @@ Add `TestRepository` at the end or use `addLazySingleton`''');
         on: (i) {
           i.addInstance('Text');
           i.addInstance(1);
+          i.commit();
         },
       );
 

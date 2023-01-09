@@ -4,6 +4,7 @@ import 'param.dart';
 
 /// Automatic Dependency Injection System, but without build_runner :)
 /// <br>
+/// `[tag]`: AutoInject instance identity.<br>
 /// `[on]`: Helps with instance registration.<br>
 /// `[paramObservers]`: List of functions that listen and transform parameters while they
 /// are being parsed when requested by the `get()` method.
@@ -18,8 +19,9 @@ import 'param.dart';
 abstract class AutoInjector {
   final List<ParamTransform> _paramTransforms = [];
   final void Function(AutoInjector injector)? on;
+  final String _tag;
 
-  AutoInjector._(List<ParamTransform> paramObservers, this.on) {
+  AutoInjector._(this._tag, List<ParamTransform> paramObservers, this.on) {
     _paramTransforms.addAll(paramObservers);
   }
 
@@ -37,10 +39,12 @@ abstract class AutoInjector {
   /// injector.get<MyDatasource>();
   /// ```
   factory AutoInjector({
+    String? tag,
     List<ParamTransform> paramTransforms = const [],
     void Function(AutoInjector injector)? on,
   }) {
-    return _AutoInjector(paramTransforms, on);
+    tag ??= 'container:${DateTime.now().millisecondsSinceEpoch}-injector';
+    return _AutoInjector(tag, paramTransforms, on);
   }
 
   /// Request an instance by [Type]
@@ -51,25 +55,43 @@ abstract class AutoInjector {
 
   /// Register a factory instance.
   /// A new instance will be generated whenever requested.
-  void add<T>(Function constructor);
+  /// ```dart
+  /// injector.add(MyController.new);
+  /// ```
+  void add<T>(Function constructor, {String? tag});
 
   /// Register a instance.
   /// A concrete object (Not a function).
-  void addInstance<T>(T instance);
+  /// ```dart
+  /// injector.addInstance(MyController());
+  /// ```
+  void addInstance<T>(T instance, {String? tag});
 
   /// Register a Singleton instance.
   /// It will generate a single instance for the duration of
   /// the application, or until manually removed.<br>
   /// The object will be started as soon as it is registered.
-  void addSingleton<T>(Function constructor);
+  /// ```dart
+  /// injector.addSingleton(MyController.new);
+  /// ```
+  void addSingleton<T>(Function constructor, {String? tag});
 
   /// Register a LazySingleton instance.
   /// It will generate a single instance for the duration of
   /// the application, or until manually removed.<br>
   /// The object will be started only when requested the first time.
-  void addLazySingleton<T>(Function constructor);
+  /// ```dart
+  /// injector.addLazySingleton(MyController.new);
+  /// ```
+  void addLazySingleton<T>(Function constructor, {String? tag});
 
-  /// Inherit all instance and transform records.
+  /// Inherit all instances and transforms from other AutoInjector object.
+  /// ```dart
+  /// final injector = AutoInjector();
+  /// final otherInjector = AutoInjector();
+  ///
+  /// injector.addInjector(otherInjector);
+  /// ```
   void addInjector(AutoInjector injector);
 
   /// Checks if the instance record exists.
@@ -78,32 +100,49 @@ abstract class AutoInjector {
   /// checks if the instance registration is as singleton.
   bool isInstantiateSingleton<T>();
 
-  /// Unregisters an instance by type.
-  void remove<T>();
-
   /// Removes the singleton instance.<br>
   /// This does not remove it from the registry tree.
-  void disposeSingleton<T>();
+  T? disposeSingleton<T>();
+
+  /// Removes singleton instances by tag.<br>
+  /// This does not remove it from the registry tree.
+  void disposeSingletonsByTag(String tag,
+      {void Function(dynamic instance)? onRemoved});
 
   /// Replaces an instance record with a concrete instance.<br>
   /// This function should only be used for unit testing.<br>
   /// Any other use is discouraged.
   void replaceInstance<T>(T instance);
+
+  /// Informs the container that the additions
+  /// are finished and the injector is ready to be used.<br>
+  /// This command starts the singletons.
+  void commit();
 }
 
 class _AutoInjector extends AutoInjector {
-  final _mapOfBinds = <String, Bind>{};
-  final _singletonInstances = <String, dynamic>{};
+  final _binds = <Bind>[];
+  var _commited = false;
 
-  _AutoInjector(List<ParamTransform> paramTransforms, void Function(AutoInjector injector)? on) : super._(paramTransforms, on) {
+  _AutoInjector(
+    String tag,
+    List<ParamTransform> paramTransforms,
+    void Function(AutoInjector injector)? on,
+  ) : super._(tag, paramTransforms, on) {
     on?.call(this);
   }
 
   @override
   T get<T>() {
+    if (!_commited) {
+      const message = '''This injector is not committed.
+It is recommended to call the commit() method after adding instances.''';
+      print('\x1B[33m$message\x1B[0m');
+    }
+
     try {
       final className = T.toString();
-      final instance = _getByClassName(className);
+      final instance = _resolveInstanceByClassName(className);
 
       if (instance == null) {
         throw NotRegistredInstance([className], '$className not registred.');
@@ -121,44 +160,36 @@ class _AutoInjector extends AutoInjector {
   }
 
   @override
-  void add<T>(Function constructor) => _add<T>(constructor);
+  void add<T>(Function constructor, {String? tag}) =>
+      _add<T>(constructor, tag ?? _tag);
 
   @override
-  void addInstance<T>(T instance) => _add<T>(() => instance);
+  void addInstance<T>(T instance, {String? tag}) =>
+      _add<T>(() => instance, tag ?? _tag, BindType.instance, instance);
 
   @override
-  void addSingleton<T>(Function constructor) {
-    final className = _add<T>(
+  void addSingleton<T>(Function constructor, {String? tag}) {
+    _add<T>(
       constructor,
+      tag ?? _tag,
       BindType.singleton,
     );
-    try {
-      _getByClassName(className);
-    } on NotRegistredInstance {
-      throw AutoInjectorException(
-        '''Singleton instances need to be added last.
-Add `$className` at the end or use `addLazySingleton`''',
-        StackTrace.current,
-      );
-    }
   }
 
   @override
-  void addLazySingleton<T>(Function constructor) => _add<T>(
+  void addLazySingleton<T>(Function constructor, {String? tag}) => _add<T>(
         constructor,
+        tag ?? _tag,
         BindType.lazySingleton,
       );
 
   @override
   void addInjector(covariant _AutoInjector injector) {
-    for (var key in injector._mapOfBinds.keys) {
-      if (!_mapOfBinds.containsKey(key)) {
-        final bind = injector._mapOfBinds[key]!;
-        if (bind.type == BindType.singleton) {
-          addSingleton(bind.constructor);
-        } else {
-          _mapOfBinds[key] = bind;
-        }
+    for (var bind in injector._binds) {
+      final index = _binds
+          .indexWhere((bindElement) => bindElement.className == bind.className);
+      if (index == -1) {
+        _binds.add(bind);
       }
     }
 
@@ -169,63 +200,121 @@ Add `$className` at the end or use `addLazySingleton`''',
   bool isAdded<T>() => _isAddedByClassName(T.toString());
 
   @override
-  bool isInstantiateSingleton<T>() => _singletonInstances.containsKey(T.toString());
+  bool isInstantiateSingleton<T>() {
+    final className = T.toString();
+    final bind = _getBindByClassName(className);
+    return bind?.hasInstance ?? false;
+  }
 
   @override
-  void disposeSingleton<T>() => _disposeSingletonByClasseName(T.toString());
+  T? disposeSingleton<T>() {
+    return _disposeSingletonByClasseName(T.toString()) as T?;
+  }
 
   @override
-  void remove<T>() {
-    var type = T.toString();
-    _mapOfBinds.remove(type);
-    _singletonInstances.remove(type);
+  void disposeSingletonsByTag(String tag,
+      {void Function(dynamic instance)? onRemoved}) {
+    for (var i = 0; i < _binds.where((bind) => bind.tag == tag).length; i++) {
+      final bind = _binds[i];
+      final instance = _disposeSingletonByClasseName(bind.className);
+      onRemoved?.call(instance);
+    }
   }
 
   @override
   void replaceInstance<T>(T instance) {
     final className = T.toString();
     if (!_isAddedByClassName(className)) {
-      throw AutoInjectorException('$className cannot be replaced as it was not added before.', StackTrace.current);
+      throw AutoInjectorException(
+          '$className cannot be replaced as it was not added before.',
+          StackTrace.current);
     }
-    remove<T>();
-    addInstance<T>(instance);
+    final index = _binds.indexWhere((bind) => bind.className == className);
+
+    var bind = Bind.withInstance<T>(instance, _binds[index].tag);
+
+    _binds[index] = bind;
   }
 
-  String _add<T>(Function constructor, [BindType type = BindType.factory]) {
-    final bind = Bind(
-      constructor: constructor,
-      type: type,
-    );
+  @override
+  void commit() {
+    _binds //
+        .where((bind) => bind.type == BindType.singleton)
+        .map((bind) => bind.className)
+        .forEach(_resolveInstanceByClassName);
+
+    _commited = true;
+  }
+
+  void _add<T>(
+    Function constructor,
+    String tag, [
+    BindType type = BindType.factory,
+    T? instance,
+  ]) {
+    if (_commited) {
+      throw AutoInjectorException(
+          'Injector commited!\nCannot add new instances, however can still use replace methods.',
+          StackTrace.current);
+    }
+
+    late Bind bind;
+
+    if (type == BindType.instance) {
+      bind = Bind.withInstance<T>(instance as T, tag);
+    } else {
+      bind = Bind(
+        constructor: constructor,
+        type: type,
+        tag: tag,
+      );
+    }
 
     if (_isAddedByClassName(bind.className)) {
-      throw AutoInjectorException('${bind.className} Class is already added.', StackTrace.current);
+      throw AutoInjectorException(
+          '${bind.className} Class is already added.', StackTrace.current);
     }
 
-    _mapOfBinds[bind.className] = bind;
-
-    return bind.className;
+    _binds.add(bind);
   }
 
-  dynamic _getByClassName(String className) {
-    final singleton = _singletonInstances[className];
+  Bind? _getBindByClassName(String className) {
+    return _binds
+        .cast<Bind?>() //
+        .firstWhere(
+          (bind) => bind?.className == className,
+          orElse: () => null,
+        );
+  }
 
-    if (singleton != null) {
-      return singleton;
-    }
-
-    final bind = _mapOfBinds[className];
+  dynamic _resolveInstanceByClassName(String className) {
+    var bind = _getBindByClassName(className);
 
     if (bind == null) {
       return null;
     }
 
+    if (bind.hasInstance) {
+      return bind.instance;
+    }
+
+    bind = _resolveBind(bind);
+
+    if (bind.type.isSingleton) {
+      _updateBinds(bind);
+    }
+
+    return bind.instance;
+  }
+
+  Bind _resolveBind(Bind bind) {
     late List<Param> params;
 
     try {
       params = _resolveParam(bind.params);
     } on NotRegistredInstance catch (e) {
       throw NotRegistredInstance(
-        [className, ...e.classNames],
+        [bind.className, ...e.classNames],
         e.message,
       );
     }
@@ -240,18 +329,36 @@ Add `$className` at the end or use `addLazySingleton`''',
         .map((param) => {param.named: param.value})
         .fold(<Symbol, dynamic>{}, (value, element) => value..addAll(element));
 
-    final instance = Function.apply(bind.constructor, positionalParams, namedParams);
+    final instance =
+        Function.apply(bind.constructor, positionalParams, namedParams);
+    bind = bind.addInstance(instance);
 
-    if (bind.type.isSingleton) {
-      _singletonInstances[className] = instance;
-    }
-
-    return instance;
+    return bind;
   }
 
-  bool _isAddedByClassName(String className) => _mapOfBinds.containsKey(className);
+  void _updateBinds(Bind bind) {
+    final index = _binds
+        .indexWhere((bindElement) => bindElement.className == bind.className);
+    if (index != -1) {
+      _binds[index] = bind;
+    }
+  }
 
-  void _disposeSingletonByClasseName(String className) => _singletonInstances.remove(className);
+  bool _isAddedByClassName(String className) {
+    final index = _binds.indexWhere((bind) => bind.className == className);
+    return index != -1;
+  }
+
+  dynamic _disposeSingletonByClasseName(String className) {
+    final index = _binds.indexWhere((bind) => bind.className == className);
+    if (index != -1) {
+      final bind = _binds[index];
+      final instance = bind.instance;
+      _binds[index] = bind.removeInstance();
+      return instance;
+    }
+    return null;
+  }
 
   List<Param> _resolveParam(List<Param> params) {
     params = List<Param>.from(params);
@@ -261,9 +368,10 @@ Add `$className` at the end or use `addLazySingleton`''',
         params[i] = param;
         continue;
       }
-      final instance = _getByClassName(param.className);
+      final instance = _resolveInstanceByClassName(param.className);
       if (!param.isNullable && instance == null) {
-        throw NotRegistredInstance([param.className], '${param.className} not registred.');
+        throw NotRegistredInstance(
+            [param.className], '${param.className} not registred.');
       }
 
       params[i] = param.addValue(instance);
