@@ -16,7 +16,7 @@ class AutoInjectorException extends Error {
   }
 }
 
-class NotRegistredInstance extends AutoInjectorException {
+class UnregisteredInstance extends AutoInjectorException {
   final List<String> classNames;
-  NotRegistredInstance(this.classNames, [super.message = '', super.stackTrace]);
+  UnregisteredInstance(this.classNames, [super.message = '', super.stackTrace]);
 }

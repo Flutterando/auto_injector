@@ -145,17 +145,17 @@ It is recommended to call the commit() method after adding instances.''';
       final instance = _resolveInstanceByClassName(className);
 
       if (instance == null) {
-        throw NotRegistredInstance([className], '$className not registred.');
+        throw UnregisteredInstance([className], '$className not registred.');
       }
 
       return instance;
-    } on NotRegistredInstance catch (e) {
+    } on UnregisteredInstance catch (e) {
       var trace = e.classNames.join('->');
       var message = e.message;
       if (e.classNames.length > 1) {
         message = '$message\nTrace: $trace';
       }
-      throw NotRegistredInstance(e.classNames, message);
+      throw UnregisteredInstance(e.classNames, message);
     }
   }
 
@@ -312,8 +312,8 @@ It is recommended to call the commit() method after adding instances.''';
 
     try {
       params = _resolveParam(bind.params);
-    } on NotRegistredInstance catch (e) {
-      throw NotRegistredInstance(
+    } on UnregisteredInstance catch (e) {
+      throw UnregisteredInstance(
         [bind.className, ...e.classNames],
         e.message,
       );
@@ -370,7 +370,7 @@ It is recommended to call the commit() method after adding instances.''';
       }
       final instance = _resolveInstanceByClassName(param.className);
       if (!param.isNullable && instance == null) {
-        throw NotRegistredInstance(
+        throw UnregisteredInstance(
             [param.className], '${param.className} not registred.');
       }
 

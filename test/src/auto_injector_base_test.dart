@@ -131,7 +131,7 @@ void main() {
       try {
         injector.get<TestDatasource>();
         throw Exception('error');
-      } on NotRegistredInstance catch (e) {
+      } on UnregisteredInstance catch (e) {
         expect(e.message, 'TestDatasource not registred.');
       }
     });
@@ -144,7 +144,7 @@ void main() {
       try {
         injector.get<TestRepository>();
         throw 'error';
-      } on NotRegistredInstance catch (e) {
+      } on UnregisteredInstance catch (e) {
         expect(e.message,
             'TestDatasource not registred.\nTrace: TestRepository->TestDatasource');
       }
@@ -157,7 +157,7 @@ void main() {
       try {
         injector.get<TestController>();
         throw 'error';
-      } on NotRegistredInstance catch (e) {
+      } on UnregisteredInstance catch (e) {
         expect(e.message,
             'TestDatasource not registred.\nTrace: TestController->TestRepository->TestDatasource');
       }
