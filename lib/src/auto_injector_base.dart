@@ -134,28 +134,19 @@ class _AutoInjector extends AutoInjector {
 
   @override
   T get<T>() {
-    if (!_commited) {
-      const message = '''This injector is not committed.
-It is recommended to call the commit() method after adding instances.''';
-      print('\x1B[33m$message\x1B[0m');
-    }
+    _checkAutoInjectorIsCommited();
 
     try {
       final className = T.toString();
       final instance = _resolveInstanceByClassName(className);
 
       if (instance == null) {
-        throw UnregisteredInstance([className], '$className not registred.');
+        throw UnregisteredInstance([className], '$className unregistered.');
       }
 
       return instance;
-    } on UnregisteredInstance catch (e) {
-      var trace = e.classNames.join('->');
-      var message = e.message;
-      if (e.classNames.length > 1) {
-        message = '$message\nTrace: $trace';
-      }
-      throw UnregisteredInstance(e.classNames, message);
+    } on UnregisteredInstance catch (exception) {
+      throw _prepareExceptionTrace(exception);
     }
   }
 
@@ -246,6 +237,117 @@ It is recommended to call the commit() method after adding instances.''';
     _commited = true;
   }
 
+  void _checkAutoInjectorIsCommited() {
+    if (!_commited) {
+      const message = r'''This injector is not committed.
+It is recommended to call the "commit()" method after adding instances.''';
+      print('\x1B[33m$message\x1B[0m');
+    }
+  }
+
+  UnregisteredInstance _prepareExceptionTrace(UnregisteredInstance exception) {
+    var trace = exception.classNames.join('->');
+    var message = exception.message;
+    if (exception.classNames.length > 1) {
+      message = '$message\nTrace: $trace';
+    }
+    return UnregisteredInstance(exception.classNames, message);
+  }
+
+  dynamic _resolveInstanceByClassName(String className) {
+    var bind = _getBindByClassName(className);
+
+    if (bind == null) {
+      return null;
+    }
+
+    if (bind.hasInstance) {
+      return bind.instance;
+    }
+
+    bind = _resolveBind(bind);
+
+    if (bind.type.isSingleton) {
+      _updateBinds(bind);
+    }
+
+    return bind.instance;
+  }
+
+  Bind? _getBindByClassName(String className) {
+    final bind = _binds
+        .cast<Bind?>() //
+        .firstWhere(
+          (bind) => bind?.className == className,
+          orElse: () => null,
+        );
+
+    return bind;
+  }
+
+  Bind _resolveBind(Bind bind) {
+    late List<Param> params;
+
+    try {
+      params = _resolveParam(bind.params);
+    } on UnregisteredInstance catch (e) {
+      throw UnregisteredInstance(
+        [bind.className, ...e.classNames],
+        e.message,
+      );
+    }
+
+    final positionalParams = params //
+        .whereType<PositionalParam>()
+        .map((param) => param.value)
+        .toList();
+
+    final namedParams = params //
+        .whereType<NamedParam>()
+        .map((param) => {param.named: param.value})
+        .fold(<Symbol, dynamic>{}, (value, element) => value..addAll(element));
+
+    final instance =
+        Function.apply(bind.constructor, positionalParams, namedParams);
+    bind = bind.addInstance(instance);
+
+    return bind;
+  }
+
+  List<Param> _resolveParam(List<Param> params) {
+    params = List<Param>.from(params);
+    for (var i = 0; i < params.length; i++) {
+      var param = _transforms(params[i]);
+      if (param.value != null) {
+        params[i] = param;
+        continue;
+      }
+      final instance = _resolveInstanceByClassName(param.className);
+      if (!param.isNullable && instance == null) {
+        throw UnregisteredInstance(
+            [param.className], '${param.className} not registred.');
+      }
+
+      params[i] = param.addValue(instance);
+    }
+
+    return params;
+  }
+
+  Param _transforms(Param param) {
+    return _paramTransforms.fold(param, (internalParam, transform) {
+      return transform(internalParam);
+    });
+  }
+
+  void _updateBinds(Bind bind) {
+    final index = _binds
+        .indexWhere((bindElement) => bindElement.className == bind.className);
+    if (index != -1) {
+      _binds[index] = bind;
+    }
+  }
+
   void _add<T>(
     Function constructor,
     String tag, [
@@ -278,72 +380,6 @@ It is recommended to call the commit() method after adding instances.''';
     _binds.add(bind);
   }
 
-  Bind? _getBindByClassName(String className) {
-    return _binds
-        .cast<Bind?>() //
-        .firstWhere(
-          (bind) => bind?.className == className,
-          orElse: () => null,
-        );
-  }
-
-  dynamic _resolveInstanceByClassName(String className) {
-    var bind = _getBindByClassName(className);
-
-    if (bind == null) {
-      return null;
-    }
-
-    if (bind.hasInstance) {
-      return bind.instance;
-    }
-
-    bind = _resolveBind(bind);
-
-    if (bind.type.isSingleton) {
-      _updateBinds(bind);
-    }
-
-    return bind.instance;
-  }
-
-  Bind _resolveBind(Bind bind) {
-    late List<Param> params;
-
-    try {
-      params = _resolveParam(bind.params);
-    } on UnregisteredInstance catch (e) {
-      throw UnregisteredInstance(
-        [bind.className, ...e.classNames],
-        e.message,
-      );
-    }
-
-    final positionalParams = params //
-        .whereType<PositionalParam>()
-        .map((param) => param.value)
-        .toList();
-
-    final namedParams = params //
-        .whereType<NamedParam>()
-        .map((param) => {param.named: param.value})
-        .fold(<Symbol, dynamic>{}, (value, element) => value..addAll(element));
-
-    final instance =
-        Function.apply(bind.constructor, positionalParams, namedParams);
-    bind = bind.addInstance(instance);
-
-    return bind;
-  }
-
-  void _updateBinds(Bind bind) {
-    final index = _binds
-        .indexWhere((bindElement) => bindElement.className == bind.className);
-    if (index != -1) {
-      _binds[index] = bind;
-    }
-  }
-
   bool _isAddedByClassName(String className) {
     final index = _binds.indexWhere((bind) => bind.className == className);
     return index != -1;
@@ -358,31 +394,5 @@ It is recommended to call the commit() method after adding instances.''';
       return instance;
     }
     return null;
-  }
-
-  List<Param> _resolveParam(List<Param> params) {
-    params = List<Param>.from(params);
-    for (var i = 0; i < params.length; i++) {
-      var param = _transforms(params[i]);
-      if (param.value != null) {
-        params[i] = param;
-        continue;
-      }
-      final instance = _resolveInstanceByClassName(param.className);
-      if (!param.isNullable && instance == null) {
-        throw UnregisteredInstance(
-            [param.className], '${param.className} not registred.');
-      }
-
-      params[i] = param.addValue(instance);
-    }
-
-    return params;
-  }
-
-  Param _transforms(Param param) {
-    return _paramTransforms.fold(param, (internalParam, transform) {
-      return transform(internalParam);
-    });
   }
 }
