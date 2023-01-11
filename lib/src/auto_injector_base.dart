@@ -8,7 +8,7 @@ import 'param.dart';
 /// `[on]`: Helps with instance registration.<br>
 /// `[paramObservers]`: List of functions that listen and transform parameters while they
 /// are being parsed when requested by the `get()` method.
-/// <Br><br>
+/// <br><br>
 /// ```dart
 /// final injector = AutoInjector();
 ///
@@ -27,10 +27,11 @@ abstract class AutoInjector {
 
   /// Automatic Dependency Injection System, but without build_runner :)
   /// <br>
+  /// `[tag]`: AutoInject instance identity.<br>
   /// `[on]`: Helps with instance registration.<br>
   /// `[paramObservers]`: List of functions that listen and transform parameters while they
   /// are being parsed when requested by the `get()` method.
-  /// <Br><br>
+  /// <br><br>
   /// ```dart
   /// final injector = AutoInjector();
   ///
@@ -151,20 +152,18 @@ class _AutoInjector extends AutoInjector {
   }
 
   @override
-  void add<T>(Function constructor, {String? tag}) =>
-      _add<T>(constructor, tag ?? _tag);
+  void add<T>(Function constructor, {String? tag}) {
+    _add<T>(constructor, tag ?? _tag);
+  }
 
   @override
-  void addInstance<T>(T instance, {String? tag}) =>
-      _add<T>(() => instance, tag ?? _tag, BindType.instance, instance);
+  void addInstance<T>(T instance, {String? tag}) {
+    _add<T>(() => instance, tag ?? _tag, BindType.instance, instance);
+  }
 
   @override
   void addSingleton<T>(Function constructor, {String? tag}) {
-    _add<T>(
-      constructor,
-      tag ?? _tag,
-      BindType.singleton,
-    );
+    _add<T>(constructor, tag ?? _tag, BindType.singleton);
   }
 
   @override
@@ -205,8 +204,10 @@ class _AutoInjector extends AutoInjector {
   @override
   void disposeSingletonsByTag(String tag,
       {void Function(dynamic instance)? onRemoved}) {
-    for (var i = 0; i < _binds.where((bind) => bind.tag == tag).length; i++) {
-      final bind = _binds[i];
+    for (var index = 0;
+        index < _binds.where((bind) => bind.tag == tag).length;
+        index++) {
+      final bind = _binds[index];
       final instance = _disposeSingletonByClasseName(bind.className);
       onRemoved?.call(instance);
     }
@@ -217,8 +218,9 @@ class _AutoInjector extends AutoInjector {
     final className = T.toString();
     if (!_isAddedByClassName(className)) {
       throw AutoInjectorException(
-          '$className cannot be replaced as it was not added before.',
-          StackTrace.current);
+        '$className cannot be replaced as it was not added before.',
+        StackTrace.current,
+      );
     }
     final index = _binds.indexWhere((bind) => bind.className == className);
 
@@ -291,10 +293,8 @@ It is recommended to call the "commit()" method after adding instances.''';
     try {
       params = _resolveParam(bind.params);
     } on UnregisteredInstance catch (e) {
-      throw UnregisteredInstance(
-        [bind.className, ...e.classNames],
-        e.message,
-      );
+      final classNames = [bind.className, ...e.classNames];
+      throw UnregisteredInstance(classNames, e.message);
     }
 
     final positionalParams = params //
@@ -356,8 +356,9 @@ It is recommended to call the "commit()" method after adding instances.''';
   ]) {
     if (_commited) {
       throw AutoInjectorException(
-          'Injector commited!\nCannot add new instances, however can still use replace methods.',
-          StackTrace.current);
+        'Injector commited!\nCannot add new instances, however can still use replace methods.',
+        StackTrace.current,
+      );
     }
 
     late Bind bind;
