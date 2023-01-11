@@ -9,6 +9,7 @@ final homeModule = AutoInjector(
   on: (i) {
     i.addInjector(productModule);
     i.addInjector(userModule);
+    i.commit();
   },
 );
 
