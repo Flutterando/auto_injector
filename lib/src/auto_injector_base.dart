@@ -49,10 +49,25 @@ abstract class AutoInjector {
   }
 
   /// Request an instance by [Type]
-  T get<T>();
+  /// <br>
+  /// [transform]: Transform a param. This can be used for example
+  /// to replace an instance with a mock in tests.
+  T get<T>({ParamTransform? transform});
 
   /// Request an instance by [Type]
-  T call<T>() => get<T>();
+  /// <br>
+  /// [transform]: Transform a param. This can be used for example
+  /// to replace an instance with a mock in tests.
+  T call<T>({
+    ParamTransform? transform,
+  }) =>
+      get<T>(transform: transform);
+
+  /// Request an instance by [Type] that when throwing an exception returns null.
+  /// <br>
+  /// [transform]: Transform a param. This can be used for example
+  /// to replace an instance with a mock in tests.
+  T? tryGet<T>({ParamTransform? transform});
 
   /// Register a factory instance.
   /// A new instance will be generated whenever requested.
@@ -134,12 +149,12 @@ class _AutoInjector extends AutoInjector {
   }
 
   @override
-  T get<T>() {
+  T get<T>({ParamTransform? transform}) {
     _checkAutoInjectorIsCommited();
 
     try {
       final className = T.toString();
-      final instance = _resolveInstanceByClassName(className);
+      final instance = _resolveInstanceByClassName(className, transform);
 
       if (instance == null) {
         throw UnregisteredInstance([className], '$className unregistered.');
@@ -148,6 +163,15 @@ class _AutoInjector extends AutoInjector {
       return instance;
     } on UnregisteredInstance catch (exception) {
       throw _prepareExceptionTrace(exception);
+    }
+  }
+
+  @override
+  T? tryGet<T>({ParamTransform? transform}) {
+    try {
+      return get<T>(transform: transform);
+    } catch (e) {
+      return null;
     }
   }
 
@@ -256,7 +280,10 @@ It is recommended to call the "commit()" method after adding instances.''';
     return UnregisteredInstance(exception.classNames, message);
   }
 
-  dynamic _resolveInstanceByClassName(String className) {
+  dynamic _resolveInstanceByClassName(
+    String className, [
+    ParamTransform? transform,
+  ]) {
     var bind = _getBindByClassName(className);
 
     if (bind == null) {
@@ -267,7 +294,7 @@ It is recommended to call the "commit()" method after adding instances.''';
       return bind.instance;
     }
 
-    bind = _resolveBind(bind);
+    bind = _resolveBind(bind, transform);
 
     if (bind.type.isSingleton) {
       _updateBinds(bind);
@@ -287,11 +314,14 @@ It is recommended to call the "commit()" method after adding instances.''';
     return bind;
   }
 
-  Bind _resolveBind(Bind bind) {
+  Bind _resolveBind(
+    Bind bind,
+    ParamTransform? transform,
+  ) {
     late List<Param> params;
 
     try {
-      params = _resolveParam(bind.params);
+      params = _resolveParam(bind.params, transform);
     } on UnregisteredInstance catch (e) {
       final classNames = [bind.className, ...e.classNames];
       throw UnregisteredInstance(classNames, e.message);
@@ -314,15 +344,18 @@ It is recommended to call the "commit()" method after adding instances.''';
     return bind;
   }
 
-  List<Param> _resolveParam(List<Param> params) {
+  List<Param> _resolveParam(
+    List<Param> params,
+    ParamTransform? transform,
+  ) {
     params = List<Param>.from(params);
     for (var i = 0; i < params.length; i++) {
-      var param = _transforms(params[i]);
+      var param = _transforms(params[i], transform);
       if (param.value != null) {
         params[i] = param;
         continue;
       }
-      final instance = _resolveInstanceByClassName(param.className);
+      final instance = _resolveInstanceByClassName(param.className, transform);
       if (!param.isNullable && instance == null) {
         throw UnregisteredInstance(
             [param.className], '${param.className} not registred.');
@@ -334,9 +367,14 @@ It is recommended to call the "commit()" method after adding instances.''';
     return params;
   }
 
-  Param _transforms(Param param) {
-    return _paramTransforms.fold(param, (internalParam, transform) {
-      return transform(internalParam);
+  Param _transforms(Param param, ParamTransform? transform) {
+    final allTransforms = [
+      if (transform != null) transform,
+      ..._paramTransforms,
+    ];
+
+    return allTransforms.fold(param, (internalParam, localTransform) {
+      return localTransform(internalParam);
     });
   }
 

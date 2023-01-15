@@ -265,6 +265,50 @@ void main() {
       expect(injector.get<int>(), 1);
     });
   });
+
+  group('get with transform', () {
+    test('change a injection', () {
+      final ds = TestDatasource();
+      injector.add(TestController.new);
+      injector.add(TestRepository.new);
+      injector.addInstance(ds);
+      injector.commit();
+
+      final dsChange = TestDatasource();
+
+      final datasourceChangedHash = injector //
+          .get<TestController>(transform: (param) {
+            if (param.className == 'TestDatasource') {
+              return param.addValue(dsChange);
+            }
+            return param;
+          })
+          .repository
+          .datasource
+          .hashCode;
+
+      expect(datasourceChangedHash != ds.hashCode, true);
+      expect(datasourceChangedHash, dsChange.hashCode);
+    });
+  });
+
+  group('try get', () {
+    test('return a value', () {
+      injector.add(TestController.new);
+      injector.add(TestRepository.new);
+      injector.add(TestDatasource.new);
+      injector.commit();
+
+      expect(injector.tryGet<TestController>(), isA<TestController>());
+    });
+    test('return null if exception', () {
+      injector.add(TestController.new);
+      injector.add(TestRepository.new);
+      injector.commit();
+
+      expect(injector.tryGet<TestController>(), null);
+    });
+  });
 }
 
 class TestController {
