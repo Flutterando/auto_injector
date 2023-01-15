@@ -1,6 +1,6 @@
 # Auto Injector
 
-Dependency injection system. But without build_runner :)
+Automatic Dependency injection system without build_runner :)
 
 ## IMPORTANT!
 
@@ -9,35 +9,25 @@ Not recommended for use in production!
 
 ## Example
 
+Register instances:
 
 ```dart
+final autoInjector = AutoInjector();
 
 void main(){
 
-    final autoInjector = AutoInjector();
 
     // factory
     autoInjector.add(Controller.new);
-
-    // lazySingleton
-    autoInjector.addLazySingleton(Repository.new);
-
     // Singleton
     autoInjector.addSingleton(Datasource.new);
-
+    // lazySingleton
+    autoInjector.addLazySingleton(Repository.new);
     // instance
     autoInjector.instance('Instance');
 
     // Inform that you have finished adding instances
     autoInjector.commit();
-
-    // fetch
-    final controller = autoInjector.get<Controller>();
-    print(controller); // Instance of 'Controller'.
-
-    // or use calleble function (withless .get())
-    final datasource = autoInjector<Datasource>();
-    print(datasource); // Instance of 'Datasource'.
 
 }
 
@@ -45,17 +35,45 @@ void main(){
 class Controller {
     final Repository repository;
 
-    Controller(this.repository)
+    Controller(this.repository);
 }
 
 class Repository {
     final Datasource datasource;
 
-    Repository({required this.datasource})
+    Repository({required this.datasource});
 }
 
 class Datasource {}
 
+```
+
+Get instance:
+
+```dart
+  // fetch
+  final controller = autoInjector.get<Controller>();
+  print(controller); // Instance of 'Controller'.
+
+  // or use calleble function (withless .get())
+  final datasource = autoInjector<Datasource>();
+  print(datasource); // Instance of 'Datasource'.
+```
+
+Try get instance:
+
+```dart
+  // use tryGet that returns null if exception.
+  final datasource = autoInjector.tryGet<Datasource>() ?? Datasource();
+  print(datasource); // Instance of 'Datasource'.
+```
+
+Get instance and transform params.
+This can be used for example to replace an instance with a mock in tests.
+
+```dart
+  final datasource = autoInjector.get<Datasource>(transform: changeParam(DataSourceMock()));
+  print(datasource); // Instance of 'Datasource'.
 ```
 
 ## Dispose Singleton
@@ -116,8 +134,8 @@ void main() {
 
 ```
 
-Também é possível remover todos os singletons de uma tag específica usando o método
-`disposeSingletonsByTag` que informa cada instância removida atraves de uma função anônima:
+It is also possible to remove all singletons from a specific tag using the method
+`disposeSingletonsByTag` which reports each instance removed via an anonymous function:
 
 ```dart
 autoInjector.disposeSingletonsByTag('ProductModule', (instance){
@@ -127,8 +145,8 @@ autoInjector.disposeSingletonsByTag('ProductModule', (instance){
 
 ## Param Transform
 
-Existe a possíbilidade de escutar e transformar todos os paramentros que estão sendo analisados
-quando há o pedido da instancia (`AutoInject.get()`). Adicione transformadores na instância principal.
+There is the possibility to listen and transform all the parameters that are being analyzed
+when there is an instance request (`AutoInject.get()`). Add transformers on the main instance:
 
 ```dart
 final homeModule = AutoInjector(
@@ -137,8 +155,6 @@ final homeModule = AutoInjector(
     if(param is NamedParam){
         return param;
     } else if(param is PositionalParam) {
-        return param;
-    } else {
         return param;
     }
   ],
