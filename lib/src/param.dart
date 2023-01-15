@@ -1,7 +1,16 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:meta/meta.dart';
 
-typedef ParamTransform = Param Function(Param param);
+typedef ParamTransform = Param? Function(Param param);
+
+ParamTransform changeParam<T>(T newValue) {
+  return (param) {
+    if (T.toString() == param.className) {
+      return param.setValue(newValue);
+    }
+    return null;
+  };
+}
 
 @sealed
 abstract class Param {
@@ -15,7 +24,7 @@ abstract class Param {
     this.value,
   });
 
-  Param addValue(dynamic value);
+  Param setValue(dynamic value);
 }
 
 @sealed
@@ -32,7 +41,7 @@ class NamedParam extends Param {
   });
 
   @override
-  NamedParam addValue(value) {
+  NamedParam setValue(value) {
     return NamedParam(
       named: named,
       className: className,
@@ -52,7 +61,7 @@ class PositionalParam extends Param {
   });
 
   @override
-  PositionalParam addValue(value) {
+  PositionalParam setValue(value) {
     return PositionalParam(
       className: className,
       isNullable: isNullable,

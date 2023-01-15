@@ -122,8 +122,7 @@ abstract class AutoInjector {
 
   /// Removes singleton instances by tag.<br>
   /// This does not remove it from the registry tree.
-  void disposeSingletonsByTag(String tag,
-      {void Function(dynamic instance)? onRemoved});
+  void disposeSingletonsByTag(String tag, {void Function(dynamic instance)? onRemoved});
 
   /// Replaces an instance record with a concrete instance.<br>
   /// This function should only be used for unit testing.<br>
@@ -200,8 +199,7 @@ class _AutoInjector extends AutoInjector {
   @override
   void addInjector(covariant _AutoInjector injector) {
     for (var bind in injector._binds) {
-      final index = _binds
-          .indexWhere((bindElement) => bindElement.className == bind.className);
+      final index = _binds.indexWhere((bindElement) => bindElement.className == bind.className);
       if (index == -1) {
         _binds.add(bind);
       }
@@ -226,11 +224,8 @@ class _AutoInjector extends AutoInjector {
   }
 
   @override
-  void disposeSingletonsByTag(String tag,
-      {void Function(dynamic instance)? onRemoved}) {
-    for (var index = 0;
-        index < _binds.where((bind) => bind.tag == tag).length;
-        index++) {
+  void disposeSingletonsByTag(String tag, {void Function(dynamic instance)? onRemoved}) {
+    for (var index = 0; index < _binds.where((bind) => bind.tag == tag).length; index++) {
       final bind = _binds[index];
       final instance = _disposeSingletonByClasseName(bind.className);
       onRemoved?.call(instance);
@@ -337,8 +332,7 @@ It is recommended to call the "commit()" method after adding instances.''';
         .map((param) => {param.named: param.value})
         .fold(<Symbol, dynamic>{}, (value, element) => value..addAll(element));
 
-    final instance =
-        Function.apply(bind.constructor, positionalParams, namedParams);
+    final instance = Function.apply(bind.constructor, positionalParams, namedParams);
     bind = bind.addInstance(instance);
 
     return bind;
@@ -357,11 +351,10 @@ It is recommended to call the "commit()" method after adding instances.''';
       }
       final instance = _resolveInstanceByClassName(param.className, transform);
       if (!param.isNullable && instance == null) {
-        throw UnregisteredInstance(
-            [param.className], '${param.className} not registred.');
+        throw UnregisteredInstance([param.className], '${param.className} not registred.');
       }
 
-      params[i] = param.addValue(instance);
+      params[i] = param.setValue(instance);
     }
 
     return params;
@@ -374,13 +367,12 @@ It is recommended to call the "commit()" method after adding instances.''';
     ];
 
     return allTransforms.fold(param, (internalParam, localTransform) {
-      return localTransform(internalParam);
+      return localTransform(internalParam) ?? internalParam;
     });
   }
 
   void _updateBinds(Bind bind) {
-    final index = _binds
-        .indexWhere((bindElement) => bindElement.className == bind.className);
+    final index = _binds.indexWhere((bindElement) => bindElement.className == bind.className);
     if (index != -1) {
       _binds[index] = bind;
     }
@@ -412,8 +404,7 @@ It is recommended to call the "commit()" method after adding instances.''';
     }
 
     if (_isAddedByClassName(bind.className)) {
-      throw AutoInjectorException(
-          '${bind.className} Class is already added.', StackTrace.current);
+      throw AutoInjectorException('${bind.className} Class is already added.', StackTrace.current);
     }
 
     _binds.add(bind);

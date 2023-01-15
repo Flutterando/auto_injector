@@ -20,8 +20,7 @@ void main() {
     injector.add(TestDatasource.new);
     injector.commit();
 
-    expect(() => injector.add(TestDatasource.new),
-        throwsA(isA<AutoInjectorException>()));
+    expect(() => injector.add(TestDatasource.new), throwsA(isA<AutoInjectorException>()));
   });
 
   test('AutoInjector: addInstance', () async {
@@ -88,8 +87,7 @@ void main() {
   test('Invalid added again', () {
     injector.add<TestDatasource>(TestDatasource.new);
 
-    expect(() => injector.add(TestDatasource.new),
-        throwsA(isA<AutoInjectorException>()));
+    expect(() => injector.add(TestDatasource.new), throwsA(isA<AutoInjectorException>()));
   });
 
   group('AutoInjector: get', () {
@@ -145,8 +143,7 @@ void main() {
         injector.get<TestRepository>();
         throw 'error';
       } on UnregisteredInstance catch (e) {
-        expect(e.message,
-            'TestDatasource not registred.\nTrace: TestRepository->TestDatasource');
+        expect(e.message, 'TestDatasource not registred.\nTrace: TestRepository->TestDatasource');
       }
     });
 
@@ -158,8 +155,7 @@ void main() {
         injector.get<TestController>();
         throw 'error';
       } on UnregisteredInstance catch (e) {
-        expect(e.message,
-            'TestDatasource not registred.\nTrace: TestController->TestRepository->TestDatasource');
+        expect(e.message, 'TestDatasource not registred.\nTrace: TestController->TestRepository->TestDatasource');
       }
     });
   });
@@ -176,8 +172,7 @@ void main() {
     });
 
     test('Throw AutoInjectorException when have no added before', () {
-      expect(() => injector.replaceInstance<String>('Changed'),
-          throwsA(isA<AutoInjectorException>()));
+      expect(() => injector.replaceInstance<String>('Changed'), throwsA(isA<AutoInjectorException>()));
     });
   });
 
@@ -186,9 +181,9 @@ void main() {
       final injector = AutoInjector(paramTransforms: [
         (param) {
           if (param.className == 'String') {
-            return param.addValue('Text');
+            return param.setValue('Text');
           } else if (param.className == 'TestDatasource') {
-            return param.addValue(TestDatasource());
+            return param.setValue(TestDatasource());
           }
           return param;
         },
@@ -277,12 +272,7 @@ void main() {
       final dsChange = TestDatasource();
 
       final datasourceChangedHash = injector //
-          .get<TestController>(transform: (param) {
-            if (param.className == 'TestDatasource') {
-              return param.addValue(dsChange);
-            }
-            return param;
-          })
+          .get<TestController>(transform: changeParam(dsChange))
           .repository
           .datasource
           .hashCode;

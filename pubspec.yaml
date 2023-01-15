@@ -1,6 +1,6 @@
 name: auto_injector
 description: Automatic Dependency Injection System, but without build_runner :)
-version: 0.0.1-alpha.2
+version: 0.0.1-alpha.3
 repository: https://github.com/Flutterando/auto_injector
 
 environment:
