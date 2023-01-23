@@ -396,7 +396,7 @@ It is recommended to call the "commit()" method after adding instances.''';
     if (type == BindType.instance) {
       bind = Bind.withInstance<T>(instance as T, tag);
     } else {
-      bind = Bind(
+      bind = Bind.withConstructor<T>(
         constructor: constructor,
         type: type,
         tag: tag,

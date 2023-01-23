@@ -45,13 +45,13 @@ class Bind {
     );
   }
 
-  factory Bind({
+  static Bind withConstructor<T>({
     required Function constructor,
     required BindType type,
     required String tag,
   }) {
     final constructorString = constructor.runtimeType.toString();
-    final className = _resolveClassName(constructorString);
+    final className = _resolveClassName<T>(constructorString);
     final params = _extractParams(constructorString);
     return Bind._(
       constructor: constructor,
@@ -141,6 +141,10 @@ class Bind {
   }
 
   static String _resolveClassName<T>(String constructorString) {
+    final typeName = T.toString();
+    final isDynamicType = typeName == 'dynamic';
+    if(!isDynamicType) return typeName;
+
     final className = constructorString.split(' => ').last;
     return className;
   }
