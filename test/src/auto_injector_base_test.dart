@@ -299,7 +299,19 @@ void main() {
       expect(injector.tryGet<TestController>(), null);
     });
   });
+
+  test('inversion of control', () {
+    final injector = AutoInjector();
+    injector.addLazySingleton<InversionOfControlInterface>(InversionOfControlImplementation.new);
+    injector.commit();
+    final instance = injector.get<InversionOfControlInterface>();
+    expect(instance, isA<InversionOfControlImplementation>());
+  });
 }
+
+abstract class InversionOfControlInterface {}
+
+class InversionOfControlImplementation implements InversionOfControlInterface {}
 
 class TestController {
   final TestRepository repository;
