@@ -1,0 +1,14 @@
+name: auto_injector
+description: Automatic Dependency Injection System, but without build_runner :)
+version: 1.0.0
+repository: https://github.com/Flutterando/auto_injector
+
+environment:
+  sdk: '>=2.18.0 <3.0.0'
+
+dependencies:
+  meta: '>=1.5.0 <2.0.0'
+
+dev_dependencies:
+  flutterando_analysis: ^0.0.1
+  test: ^1.16.0
