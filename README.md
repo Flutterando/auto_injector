@@ -2,12 +2,7 @@
 
 Automatic Dependency injection system without build_runner :)
 
-## IMPORTANT!
-
-This package is still under development.
-Not recommended for use in production!
-
-## Example
+## Usage
 
 Register instances:
 
