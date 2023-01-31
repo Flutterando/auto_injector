@@ -25,8 +25,7 @@ void main() {
     expect(injector.hasTag(tag), true);
   });
 
-  test('AutoInjector: add with dynamic must return AutoInjector instance',
-      () async {
+  test('AutoInjector: add with dynamic must return AutoInjector instance', () async {
     expect(injector.isAdded<TestDatasource>(), false);
 
     injector.add(TestDatasource.new);
@@ -147,6 +146,15 @@ void main() {
       injector.commit();
 
       expect(injector.get<TestController>(), isA<TestController>());
+    });
+
+    test('Get instance with named params and positional params', () {
+      injector.add(OtherRepository.new);
+      injector.add(TestDatasource.new);
+      injector.addInstance('Test');
+      injector.commit();
+
+      expect(injector.get<OtherRepository>(), isA<OtherRepository>());
     });
 
     test('Error when get not registred instance', () {
@@ -390,3 +398,11 @@ class TestRepository {
 }
 
 class TestDatasource {}
+
+class OtherRepository {
+  final String name;
+
+  final TestDatasource datasource;
+
+  OtherRepository(this.name, {required this.datasource});
+}

@@ -130,6 +130,7 @@ class Bind<T> {
       final allParam = allArgs //
           .split(',')
           .map((e) => e.trim())
+          .where((e) => e.isNotEmpty)
           .map((e) {
         return PositionalParam(
           className: e.replaceFirst('?', ''),
