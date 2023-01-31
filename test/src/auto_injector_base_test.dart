@@ -25,7 +25,8 @@ void main() {
     expect(injector.hasTag(tag), true);
   });
 
-  test('AutoInjector: add with dynamic must return AutoInjector instance', () async {
+  test('AutoInjector: add with dynamic must return AutoInjector instance',
+      () async {
     expect(injector.isAdded<TestDatasource>(), false);
 
     injector.add(TestDatasource.new);
