@@ -146,8 +146,8 @@ class Bind<T> {
 
   static String _resolveClassName<T>(String constructorString) {
     final typeName = T.toString();
-    final isDynamicType = typeName == 'dynamic';
-    if (!isDynamicType) return typeName;
+    final isDynamicOrObjectType = ['dynamic', 'Object'].contains(typeName);
+    if (!isDynamicOrObjectType) return typeName;
 
     final className = constructorString.split(' => ').last;
     return className;
