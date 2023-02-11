@@ -163,6 +163,7 @@ void main() {
         injector.get<TestDatasource>();
         throw Exception('error');
       } on UnregisteredInstance catch (e) {
+        e.toString();
         expect(e.message, 'TestDatasource unregistered.');
       }
     });
