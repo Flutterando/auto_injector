@@ -309,7 +309,7 @@ _For more examples, please refer to the_ [Documentation](https://pub.dev/documen
 <!---- Use this section to highlight your features and show  what is under progress. Use emojis for better communication if needed like ✅ for tasks done and 🚧 for Work In Progress ---->
 ## Features
 
-- ✅ Auto Dependencie Injection
+- ✅ Auto Dependency Injection
 - ✅ Factory Injection
 - ✅ Singleton Injection
 - ✅ Lazy Singleton Injection
