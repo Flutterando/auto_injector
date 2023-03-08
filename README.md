@@ -8,7 +8,7 @@
 <div align="center">
   <!-- You should link the logo to the pub dev page of you project or a homepage otherwise -->
   <a href="https://github.com/Flutterando/README-Template/">
-    <img src="https://github.com/Flutterando/auto_injector/blob/documentation/readme_assets/logo-auto-injection.png" alt="Logo" width="180">
+    <img src="https://github.com/Flutterando/auto_injector/blob/main/readme_assets/logo-auto-injection.png" alt="Logo" width="180">
   </a>
 
   <p align="center">
