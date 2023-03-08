@@ -1,3 +1,7 @@
+## 1.0.2+2 (2023-03-08)
+
+- Fix: dart doc & readme
+
 ## 1.0.2+1 (2023-03-07)
 
 - Added: documentation with dart doc
