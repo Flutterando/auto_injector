@@ -7,20 +7,19 @@
 <br />
 <div align="center">
   <!-- You should link the logo to the pub dev page of you project or a homepage otherwise -->
-  <a href="https://github.com/Flutterando/README-Template/">
-    <img src="https://github.com/Flutterando/auto_injector/blob/main/readme_assets/logo-auto-injection.png" alt="Logo" width="180">
+  <a href="https://github.com/Flutterando/auto_injector/">
+    <img src="https://raw.githubusercontent.com/Flutterando/auto_injector/main/readme_assets/logo-auto-injection.png" alt="Logo" width="180">
   </a>
 
   <p align="center">
     A simple way to inject dependencies in your project.
     <br />
     <!-- Put the link for the documentation here -->
-    <a href="https://pub.dev/packages/auto_injector"><strong>Explore the docs »</strong></a>
+    <a href="https://pub.dev/documentation/auto_injector/latest/"><strong>Explore the docs »</strong></a>
     <br />
     <br />
     <!-- Disable unused links with with comments -->
     <!--<a href="https://pub.dev/publishers/flutterando.com.br/packages">View Demo</a> -->
-    ·
     <!-- The Report Bug and Request Feature should point to the issues page of the project, in this example we use the pull requests page because this is a github template -->
     <a href="https://github.com/flutterando/auto_injector/issues">Report Bug</a>
     ·
