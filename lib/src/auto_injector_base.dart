@@ -301,8 +301,9 @@ class _AutoInjector extends AutoInjector {
   @override
   void addInjector(covariant _AutoInjector injector) {
     for (final bind in injector._binds) {
-      final index = _binds
-          .indexWhere((bindElement) => bindElement.className == bind.className);
+      final index = _binds.indexWhere(
+        (bindElement) => bindElement.className == bind.className,
+      );
       if (index == -1) {
         _binds.add(bind);
       }
@@ -331,10 +332,11 @@ class _AutoInjector extends AutoInjector {
     String tag, {
     void Function(dynamic instance)? onRemoved,
   }) {
-    final taggedBinds =
-        List<Bind>.from(_binds.where((bind) => bind.tag == tag));
+    final taggedBinds = List<Bind>.from(
+      _binds.where((bind) => bind.tag == tag),
+    );
     for (var index = 0; index < taggedBinds.length; index++) {
-      final bind = _binds[index];
+      final bind = taggedBinds[index];
       final instance = _disposeSingletonByClasseName(bind.className);
       onRemoved?.call(instance);
     }
@@ -342,7 +344,6 @@ class _AutoInjector extends AutoInjector {
 
   @override
   void removeByTag(String tag) {
-    _checkAutoInjectorIsCommited();
     _binds.removeWhere((bind) {
       final condition = bind.tag == tag;
       if (condition && bind.instance != null) {
@@ -478,8 +479,11 @@ It is recommended to call the "commit()" method after adding instances.'''
         .map((param) => {param.named: param.value})
         .fold(<Symbol, dynamic>{}, (value, element) => value..addAll(element));
 
-    final instance =
-        Function.apply(bind.constructor, positionalParams, namedParams);
+    final instance = Function.apply(
+      bind.constructor,
+      positionalParams,
+      namedParams,
+    );
     return bind.addInstance(instance);
   }
 
@@ -521,8 +525,9 @@ It is recommended to call the "commit()" method after adding instances.'''
   }
 
   void _updateBinds(Bind bind) {
-    final index = _binds
-        .indexWhere((bindElement) => bindElement.className == bind.className);
+    final index = _binds.indexWhere(
+      (bindElement) => bindElement.className == bind.className,
+    );
     if (index != -1) {
       _binds[index] = bind;
     }
