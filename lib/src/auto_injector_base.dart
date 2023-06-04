@@ -257,11 +257,14 @@ class _AutoInjector extends AutoInjector {
     DisposeCallback<T>? onDispose,
     NotifierCallback<T>? notifier,
   }) {
-    _add<T>(() => instance, tag ?? _tag,
-        type: BindType.instance,
-        instance: instance,
-        onDispose: onDispose,
-        notifier: notifier);
+    _add<T>(
+      () => instance,
+      tag ?? _tag,
+      type: BindType.instance,
+      instance: instance,
+      onDispose: onDispose,
+      notifier: notifier,
+    );
   }
 
   @override
@@ -362,10 +365,11 @@ class _AutoInjector extends AutoInjector {
     final index = _binds.indexWhere((bind) => bind.className == className);
 
     final bind = Bind<T>(
-        constructor: () => instance,
-        type: BindType.instance,
-        tag: _binds[index].tag,
-        instance: instance);
+      constructor: () => instance,
+      type: BindType.instance,
+      tag: _binds[index].tag,
+      instance: instance,
+    );
 
     _binds[index] = bind;
   }

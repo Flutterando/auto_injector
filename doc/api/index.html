@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="generator" content="made with love by dartdoc 6.1.5">
+  <meta name="description" content="auto_injector API docs, for the Dart programming language.">
+  <title>auto_injector - Dart API docs</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="static-assets/github.css?v1">
+  <link rel="stylesheet" href="static-assets/styles.css?v1">
+  <link rel="icon" href="static-assets/favicon.png?v1">
+
+  
+</head>
+
+
+<body data-base-href="" data-using-base-href="false" class="light-theme">
+
+<div id="overlay-under-drawer"></div>
+
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li class="self-crumb">auto_injector package</li>
+  </ol>
+  <div class="self-name">auto_injector</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <div class="toggle" id="theme-button">
+    <label for="theme">
+      <input type="checkbox" id="theme" value="light-theme">
+      <span class="material-symbols-outlined">
+        brightness_4
+      </span>
+    </label>
+  </div>
+</header>
+<main>
+
+  <div id="dartdoc-main-content" class="main-content">
+      
+<section class="desc markdown">
+  <p><a name="readme-top"></a></p><h1 align="center">Auto Injector - Automatic Dependency injection system without build_runner.</h1>
+<!-- PROJECT LOGO -->
+<div align="center">
+<!-- You should link the logo to the pub dev page of you project or a homepage otherwise -->
+<a href="https://github.com/Flutterando/auto_injector/">
+<img src="https://raw.githubusercontent.com/Flutterando/auto_injector/main/readme_assets/logo-auto-injection.png" alt="Logo" width="180">
+</a>
+<p align="center">
+A simple way to inject dependencies in your project.
+<br>
+<!-- Put the link for the documentation here -->
+<a href="https://pub.dev/documentation/auto_injector/latest/"><strong>Explore the docs »</strong></a>
+<br>
+<br>
+<!-- Disable unused links with with comments -->
+<!--<a href="https://pub.dev/publishers/flutterando.com.br/packages">View Demo</a> -->
+<!-- The Report Bug and Request Feature should point to the issues page of the project, in this example we use the pull requests page because this is a github template -->
+<a href="https://github.com/flutterando/auto_injector/issues">Report Bug</a>
+·
+<a href="https://github.com/flutterando/auto_injector/issues">Request Feature</a>
+</p>
+<br>
+<!--  SHIELDS  ----><!-- The shields here are an example of what could be used and are the most recommended, there are more below in the "some recomendations about shields" section. 
+See the links in the example below, changing the parts after img.shields.io you can change the content of the shields. Alternatively, go to the website and generate new shields.  
+
+[![Version](https://img.shields.io/github/v/release/flutterando/auto_injector?style=plastic)](https://pub.dev/packages/auto_injector)
+[![Pub Points](https://img.shields.io/pub/points/auto_injector?label=pub%20points&style=plastic)](https://pub.dev/packages/auto_injector/score)
+[![Flutterando Analysis](https://img.shields.io/badge/style-flutterando__analysis-blueviolet?style=plastic)](https://pub.dev/packages/flutterando_analysis/)
+
+[![Pub Publisher](https://img.shields.io/pub/publisher/auto_injector?style=plastic)](https://pub.dev/publishers/flutterando.com.br/packages)
+
+
+
+The ones used here are:
+- Release version
+- Pub Points
+- style: Flutterando analysis
+- publisher: Flutterando --->
+<p><a href="https://pub.dev/packages/auto_injector"><img src="https://img.shields.io/github/v/release/flutterando/auto_injector?style=plastic" alt="Version"></a>
+<a href="https://pub.dev/packages/auto_injector/score"><img src="https://img.shields.io/pub/points/auto_injector?label=pub%20points&amp;style=plastic" alt="Pub Points"></a>
+<a href="https://pub.dev/packages/flutterando_analysis/"><img src="https://img.shields.io/badge/style-flutterando__analysis-blueviolet?style=plastic" alt="Flutterando Analysis"></a></p>
+<p><a href="https://pub.dev/publishers/flutterando.com.br/packages"><img src="https://img.shields.io/pub/publisher/auto_injector?style=plastic" alt="Pub Publisher"></a></p></div>
+<!----
+About Shields, some recommendations:
++-+
+Build - GithubWorkflow ou Github Commit checks state
+CodeCoverage - Codecov
+Chat - Discord 
+License - Github
+Rating - Pub Likes, Pub Points and Pub Popularity (if still in early stages, we recommend only Pub Points since it's controllable)
+Social - GitHub Forks, Github Org's Stars (if using Flutterando as the main org), YouTube Channel Subscribers (Again, using Flutterando, as set in the example)
+--->
+<br>
+<hr><!-- TABLE OF CONTENTS -->
+<details>
+  <summary>Table of Contents</summary>
+  <ol>
+    <li><a href="#about-the-project">About The Project</a></li>
+    <li><a href="#sponsors">Sponsors</a></li>
+    <li><a href="#getting-started">Getting Started</a></li>
+    <li><a href="#how-to-use">How to Use</a></li>
+     <ol>
+      <li><a href="#dispose-singleton">Dispose Singleton</a></li>
+      <li><a href="#modularization">Modularization</a></li>
+      <li><a href="#param-transform">Param Transform</a></li>
+     </ol>
+    <li><a href="#features">Features</a></li>
+    <li><a href="#contributing">Contributing</a></li>
+    <li><a href="#contact">Contact</a></li>
+    <li><a href="#acknowledgements">Acknowledgements</a></li>
+  </ol>
+</details>
+<hr><br>
+<!-- ABOUT THE PROJECT -->
+<h2 id="about-the-project">About The Project</h2>
+<p>Auto Injector is a Dart package that was created to make the developer's life easier, making the method of how to do dependency injection simpler and more practical.
+Just create the class that will be injected and declare it within some of the available "add" methods and that's it, you already have your dependency injection ready to use.</p>
+<p><i>This project is distributed under the MIT License. See <code>LICENSE.txt</code> for more information.
+</i></p><p align="right">(<a href="#readme-top">back to top</a>)</p>
+<!-- SPONSORS --><!-- For now FTeam is the only sponsor for Flutterando packages. The community is open to more support for it's open source endeavors, so check it out and make contact with us through the links provided at the end -->
+<h2 id="sponsors">Sponsors</h2><a href="https://fteam.dev">
+    <img src="https://raw.githubusercontent.com/Flutterando/README-Template/master/readme_assets/sponsor-logo.png" alt="Logo" width="120">
+  </a>
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+<br><!-- GETTING STARTED -->
+<h2 id="getting-started">Getting Started</h2><!---- The description provided below was aimed to show how to install a pub.dev package, change it as you see fit for your project ---->
+<p>To get Auto Injector in your project follow either of the instructions below:</p>
+<p>a) Add your_package as a dependency in your Pubspec.yaml:</p>
+<pre class="language-yaml"><code class="language-yaml">  dependencies:
+    auto_injector: ^1.0.2
+</code></pre>
+<p>b) Use Dart Pub:</p>
+<pre class="language-sh"><code class="language-sh">   dart pub add auto_injector
+</code></pre><br>
+<h2 id="how-to-use">How to Use</h2><!---- In this section, provide a simple and short explanation of the base use of your project and a link to your documentation for more advanced uses --->
+<p>Register instances:</p>
+<pre class="language-dart"><code class="language-dart">final autoInjector = AutoInjector();
+
+void main(){
+
+
+    // factory
+    autoInjector.add(Controller.new);
+    // Singleton
+    autoInjector.addSingleton(Datasource.new);
+    // lazySingleton
+    autoInjector.addLazySingleton(Repository.new);
+    // instance
+    autoInjector.instance('Instance');
+
+    // Inform that you have finished adding instances
+    autoInjector.commit();
+
+}
+
+
+class Controller {
+    final Repository repository;
+
+    Controller(this.repository);
+}
+
+class Repository {
+    final Datasource datasource;
+
+    Repository({required this.datasource});
+}
+
+class Datasource {}
+
+</code></pre>
+<p>Get instance:</p>
+<pre class="language-dart"><code class="language-dart">  // fetch
+  final controller = autoInjector.get&lt;Controller&gt;();
+  print(controller); // Instance of 'Controller'.
+
+  // or use calleble function (withless .get())
+  final datasource = autoInjector&lt;Datasource&gt;();
+  print(datasource); // Instance of 'Datasource'.
+</code></pre>
+<p>Try get instance:</p>
+<pre class="language-dart"><code class="language-dart">  // use tryGet that returns null if exception.
+  final datasource = autoInjector.tryGet&lt;Datasource&gt;() ?? Datasource();
+  print(datasource); // Instance of 'Datasource'.
+</code></pre>
+<p>Get instance and transform params.
+This can be used for example to replace an instance with a mock in tests.</p>
+<pre class="language-dart"><code class="language-dart">  final datasource = autoInjector.get&lt;Datasource&gt;(transform: changeParam(DataSourceMock()));
+  print(datasource); // Instance of 'Datasource'.
+</code></pre>
+<h3 id="div-iddispose-singletondispose-singletondiv"><div id="dispose-singleton">Dispose Singleton</div></h3>
+<p>Singletons can be terminated on request using the <code>disposeSingleton</code> method returning
+the instance for executing the dispose routine.</p>
+<pre class="language-dart"><code class="language-dart">
+final deadInstance = autoInjector.disposeSingleton&lt;MyController&gt;();
+deadInstance.close();
+
+</code></pre>
+<h3 id="div-idmodularizationmodularizationdiv"><div id="modularization">Modularization</div></h3>
+<p>For projects with multiple scopes, try uniting the instances by naming them Module or Container.
+With this, you can register specific instances for each module.</p>
+<pre class="language-dart"><code class="language-dart">
+// app_module.dart
+final appModule = AutoInjector(
+  tag: 'AppModule',
+  on: (i) {
+    i.addInjector(productModule);
+    i.addInjector(userModule);
+    i.commit();
+  },
+);
+
+...
+
+// product_module.dart
+final productModule = AutoInjector(
+  tag: 'ProductModule',
+  on: (i) {
+    i.addInstance(1);
+  },
+);
+
+...
+
+// user_module.dart
+final userModule = AutoInjector(
+  tag: 'UserModule',
+  on: (i) {
+    i.addInstance(true);
+  },
+);
+
+...
+
+void main() {
+  print(appModule.get&lt;int&gt;());
+  print(appModule.get&lt;bool&gt;());
+}
+
+</code></pre>
+<p>It is also possible to remove all singletons from a specific tag using the method
+<code>disposeSingletonsByTag</code> which reports each instance removed via an anonymous function:</p>
+<pre class="language-dart"><code class="language-dart">autoInjector.disposeSingletonsByTag('ProductModule', (instance){
+  // individual dispose routine
+});
+</code></pre>
+<h3 id="div-idparam-transformparam-transformdiv"><div id="param-transform">Param Transform</div></h3>
+<p>There is the possibility to listen and transform all the parameters that are being analyzed
+when there is an instance request (<code>AutoInject.get()</code>). Add transformers on the main instance:</p>
+<pre class="language-dart"><code class="language-dart">final homeModule = AutoInjector(
+  paramTransforms: [
+    (param) {
+    if(param is NamedParam){
+        return param;
+    } else if(param is PositionalParam) {
+        return param;
+    }
+  ],
+);
+
+</code></pre><br>
+<p><em>For more examples, please refer to the</em> <a href="https://pub.dev/documentation/auto_injector/latest/">Documentation</a></p><!---- You can use the emoji 🚧 to indicate Work In Progress sections ---->
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+<!-- FEATURES -->
+<!---- Use this section to highlight your features and show  what is under progress. Use emojis for better communication if needed like ✅ for tasks done and 🚧 for Work In Progress ---->
+<h2 id="features">Features</h2>
+<ul>
+<li>✅ Auto Dependency Injection</li>
+<li>✅ Factory Injection</li>
+<li>✅ Singleton Injection</li>
+<li>✅ Lazy Singleton Injection</li>
+<li>✅ Instance Injection</li>
+</ul>
+<p>Right now this package has concluded all his intended features. If you have any suggestions or find something to report, see below how to contribute to it.</p><!---- 
+We suggest, in case of the roadmap of features has been completed, to include the text below:
+
+Right now this package has concluded all his intended features. If you have any suggestions or find something to report, see below how to contribute to it. 
+----><p align="right">(<a href="#readme-top">back to top</a>)</p><!-- CONTRIBUTING -->
+<h2 id="contributing">Contributing</h2>
+<p>Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are <strong>greatly appreciated</strong>.</p>
+<p>If you have a suggestion that would make this better, please fork the repo and create a pull request. You can also simply open an issue with the appropriate tag.
+Don't forget to give the project a star! Thanks again!</p>
+<ol>
+<li>Fork the Project</li>
+<li>Create your Feature Branch (<code>git checkout -b feature/AmazingFeature</code>)</li>
+<li>Commit your Changes (<code>git commit -m 'Add some AmazingFeature'</code>)</li>
+<li>Push to the Branch (<code>git push origin feature/AmazingFeature</code>)</li>
+<li>Open a Pull Request</li>
+</ol>
+<p>Remember to include a tag, and to follow <a href="https://www.conventionalcommits.org/en/v1.0.0/">Conventional Commits</a> and <a href="https://semver.org/">Semantic Versioning</a> when uploading your commit and/or creating the issue.</p><p align="right">(<a href="#readme-top">back to top</a>)</p>
+<!-- CONTACT -->
+<!---- Those are the current Flutterando contacts as of 25 August 2022 --->
+<h2 id="contact">Contact</h2>
+<p>Flutterando Community</p>
+<ul>
+<li><a href="https://discord.gg/qNBDHNARja">Discord</a></li>
+<li><a href="https://t.me/flutterando">Telegram</a></li>
+<li><a href="https://www.flutterando.com.br">Website</a></li>
+<li><a href="https://www.youtube.com.br/flutterando">Youtube Channel</a></li>
+<li><a href="https://linktr.ee/flutterando">Other useful links</a></li>
+</ul><p align="right">(<a href="#readme-top">back to top</a>)</p>
+<!-- ACKNOWLEDGEMENTS -->
+<h2 id="acknowledgements">Acknowledgements</h2>
+<p>Thank you to all the people who contributed to this project, whithout you this project would not be here today.</p><br>
+<!---- Change the link below to the contributors page of your project and change the repo= in the img src to properly point to your repository -->
+<a href="https://github.com/flutterando/auto_injector/graphs/contributors">
+<img src="https://contrib.rocks/image?repo=flutterando/auto_injector">
+</a>
+<!-- Here is an alternative to the contributors page: https://allcontributors.org/
+And the link for the currently used option in this readme: https://contrib.rocks/ --><p align="right">(<a href="#readme-top">back to top</a>)</p>
+<!-- MANTAINED BY -->
+<h2 id="maintaned-by">Maintaned by</h2><br>
+<p align="center">
+  <a href="https://www.flutterando.com.br">
+    <img width="110px" src="https://raw.githubusercontent.com/Flutterando/README-Template/master/readme_assets/logo-flutterando.png">
+  </a>
+  </p><p align="center">
+    Built and maintained by <a href="https://www.flutterando.com.br">Flutterando</a>.
+  </p>
+<p></p><!-- MARKDOWN LINKS & IMAGES --><!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
+<!-- [Choose an Open Source License](https://choosealicense.com)
+[GitHub Emoji Cheat Sheet](https://www.webpagefx.com/tools/emoji-cheat-sheet)
+[Malven's Flexbox Cheatsheet](https://flexbox.malven.co/)
+[Malven's Grid Cheatsheet](https://grid.malven.co/)
+[Img Shields](https://shields.io)
+[GitHub Pages](https://pages.github.com)
+[Font Awesome](https://fontawesome.com)
+[React Icons](https://react-icons.github.io/react-icons/search) 
+
+[contributors-shield]: https://img.shields.io/github/contributors/othneildrew/Best-README-Template.svg?style=for-the-badge
+[contributors-url]: https://github.com/othneildrew/Best-README-Template/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/othneildrew/Best-README-Template.svg?style=for-the-badge
+[forks-url]: https://github.com/othneildrew/Best-README-Template/network/members
+[stars-shield]: https://img.shields.io/github/stars/othneildrew/Best-README-Template.svg?style=for-the-badge
+[stars-url]: https://github.com/othneildrew/Best-README-Template/stargazers
+[issues-shield]: https://img.shields.io/github/issues/othneildrew/Best-README-Template.svg?style=for-the-badge
+[issues-url]: https://github.com/othneildrew/Best-README-Template/issues
+[license-shield]: https://img.shields.io/github/license/othneildrew/Best-README-Template.svg?style=for-the-badge
+[license-url]: https://github.com/othneildrew/Best-README-Template/blob/master/LICENSE.txt
+[linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
+[linkedin-url]: https://linkedin.com/in/othneildrew
+[product-screenshot]: images/screenshot.png
+[Next.js]: https://img.shields.io/badge/next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white
+[Next-url]: https://nextjs.org/
+[React.js]: https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB
+[React-url]: https://reactjs.org/
+[Vue.js]: https://img.shields.io/badge/Vue.js-35495E?style=for-the-badge&logo=vuedotjs&logoColor=4FC08D
+[Vue-url]: https://vuejs.org/
+[Angular.io]: https://img.shields.io/badge/Angular-DD0031?style=for-the-badge&logo=angular&logoColor=white
+[Angular-url]: https://angular.io/
+[Svelte.dev]: https://img.shields.io/badge/Svelte-4A4A55?style=for-the-badge&logo=svelte&logoColor=FF3E00
+[Svelte-url]: https://svelte.dev/
+[Laravel.com]: https://img.shields.io/badge/Laravel-FF2D20?style=for-the-badge&logo=laravel&logoColor=white
+[Laravel-url]: https://laravel.com
+[Bootstrap.com]: https://img.shields.io/badge/Bootstrap-563D7C?style=for-the-badge&logo=bootstrap&logoColor=white
+[Bootstrap-url]: https://getbootstrap.com
+[JQuery.com]: https://img.shields.io/badge/jQuery-0769AD?style=for-the-badge&logo=jquery&logoColor=white
+[JQuery-url]: https://jquery.com  -->
+</section>
+
+
+      <section class="summary">
+          <h2>Libraries</h2>
+        <dl>
+          <dt id="auto_injector">
+  <span class="name"><a href="auto_injector/auto_injector-library.html">auto_injector</a></span> 
+
+</dt>
+<dd>Support for doing something awesome.
+</dd>
+
+        </dl>
+      </section>
+
+  </div> <!-- /.main-content -->
+
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+  <li class="self-crumb">auto_injector package</li>
+</ol>
+
+
+    <h5 class="hidden-xs"><span class="package-name">auto_injector</span> <span class="package-kind">package</span></h5>
+    <ol>
+      <li class="section-title">Libraries</li>
+      <li><a href="auto_injector/auto_injector-library.html">auto_injector</a></li>
+</ol>
+
+  </div>
+
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+  </div>
+
+</main>
+
+<footer>
+  <span class="no-break">
+    auto_injector
+      1.0.2+1
+  </span>
+
+  
+</footer>
+
+
+
+<script src="static-assets/highlight.pack.js?v1"></script>
+<script src="static-assets/docs.dart.js"></script>
+
+
+
+</body>
+
+</html>
+
