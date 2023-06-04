@@ -1,3 +1,7 @@
+## 1.0.2 (2023-06-03)
+
+- fix: disposeSingletonsByTag error
+
 ## 1.0.2 (2023-02-11)
 
 - fix: Resolver class name with Object
