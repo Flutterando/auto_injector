@@ -1,10 +1,10 @@
 name: auto_injector
 description: Automatic Dependency Injection System, but without build_runner :)
-version: 1.0.2+2
+version: 1.0.3
 repository: https://github.com/Flutterando/auto_injector
 
 environment:
-  sdk: '>=2.18.0 <3.0.0'
+  sdk: '>=2.18.0 <4.0.0'
 
 dependencies:
   meta: '>=1.5.0 <2.0.0'
