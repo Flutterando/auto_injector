@@ -579,10 +579,10 @@ Injector commited!\nCannot add new instances, however can still use replace meth
     if (index != -1) {
       final bind = _binds[index];
       final instance = bind.instance;
-      if (instance == null) {
+      if (bind.instance == null) {
         return null;
       }
-      bind.onDispose?.call(instance);
+      bind.callDispose();
       _binds[index] = bind.removeInstance();
 
       return instance;

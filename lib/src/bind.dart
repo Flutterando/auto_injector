@@ -51,6 +51,13 @@ class Bind<T> {
     );
   }
 
+  void callDispose() {
+    final instance = this.instance;
+    if (instance != null) {
+      onDispose?.call(instance);
+    }
+  }
+
   Bind._({
     required this.constructor,
     required this.type,

@@ -1,3 +1,7 @@
+## 1.0.4 (2023-06-29)
+
+- fix: Internal call dispose.
+
 ## 1.0.3 (2023-06-03)
 
 - fix: disposeSingletonsByTag error
