@@ -491,7 +491,7 @@ It is recommended to call the "commit()" method after adding instances.'''
     List<Param> params,
     ParamTransform? transform,
   ) {
-    final copyParams = List<Param>.from(params);
+    final copyParams = params.where((param) => param.injectableParam).toList();
     for (var i = 0; i < copyParams.length; i++) {
       final param = _transforms(copyParams[i], transform);
       if (param.value != null) {

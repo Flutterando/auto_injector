@@ -25,8 +25,7 @@ void main() {
     expect(injector.hasTag(tag), true);
   });
 
-  test('AutoInjector: add with dynamic must return AutoInjector instance',
-      () async {
+  test('AutoInjector: add with dynamic must return AutoInjector instance', () async {
     expect(injector.isAdded<TestDatasource>(), false);
 
     injector.add(TestDatasource.new);
@@ -380,6 +379,23 @@ TestDatasource not registred.\nTrace: TestController->TestRepository->TestDataso
     injector.removeByTag('tag');
     expect(injector.bindLength, 1);
   });
+
+  test('WithNullableParams', () {
+    injector.addInstance('String');
+    injector.addSingleton(WithNullableParams.new);
+    injector.commit();
+
+    expect(injector.bindLength, 2);
+    expect(injector.get<WithNullableParams>(), isA<WithNullableParams>());
+  });
+}
+
+class WithNullableParams {
+  final String text;
+  final double? number;
+  final bool isBoolean;
+
+  WithNullableParams(this.text, {this.number = 0, this.isBoolean = true});
 }
 
 abstract class InversionOfControlInterface {}

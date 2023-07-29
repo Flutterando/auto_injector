@@ -16,6 +16,9 @@ ParamTransform changeParam<T>(T newValue) {
 abstract class Param {
   final String className;
   final bool isNullable;
+  final bool isRequired;
+
+  bool get injectableParam => !isNullable && isRequired;
 
   /// instance of param
   final dynamic value;
@@ -24,6 +27,7 @@ abstract class Param {
     required this.className,
     this.isNullable = false,
     this.value,
+    this.isRequired = true,
   });
 
   /// return a new instance of Param with value
@@ -32,7 +36,6 @@ abstract class Param {
 
 @sealed
 class NamedParam extends Param {
-  final bool isRequired;
   final Symbol named;
 
   NamedParam({
@@ -40,8 +43,8 @@ class NamedParam extends Param {
     super.value,
     required this.named,
     super.isNullable = false,
-    this.isRequired = false,
-  });
+    bool isRequired = false,
+  }) : super(isRequired: isRequired);
 
   @override
   NamedParam setValue(dynamic value) {
