@@ -72,6 +72,9 @@ abstract class Injector {
     DisposeCallback<T>? onDispose,
     NotifierCallback<T>? notifier,
   });
+
+  /// Request an notifier propertie by [Type]
+  dynamic getNotifier<T>();
 }
 
 /// Automatic Dependency Injection System, but without build_runner :)
@@ -133,9 +136,6 @@ abstract class AutoInjector extends Injector {
   /// [transform]: Transform a param. This can be used for example
   /// to replace an instance with a mock in tests.
   T? tryGet<T>({ParamTransform? transform});
-
-  /// Request an notifier propertie by [Type]
-  dynamic getNotifier<T>();
 
   /// Inherit all instances and transforms from other AutoInjector object.
   /// ```dart
