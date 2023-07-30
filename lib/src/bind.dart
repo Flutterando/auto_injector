@@ -13,6 +13,15 @@ enum BindType {
   }
 }
 
+class BindConfig<T> {
+  final DisposeCallback<T>? onDispose;
+  final NotifierCallback<T>? notifier;
+  BindConfig({
+    this.onDispose,
+    this.notifier,
+  });
+}
+
 typedef DisposeCallback<T> = void Function(T value);
 typedef NotifierCallback<T> = dynamic Function(T value);
 
@@ -23,8 +32,7 @@ class Bind<T> {
   final String className;
   final String tag;
   final T? instance;
-  final DisposeCallback<T>? onDispose;
-  final Function? notifier;
+  final BindConfig<T>? config;
 
   bool get hasInstance => instance != null;
 
@@ -32,8 +40,7 @@ class Bind<T> {
     required Function constructor,
     required BindType type,
     required String tag,
-    DisposeCallback<T>? onDispose,
-    Function? notifier,
+    BindConfig<T>? config,
     T? instance,
   }) {
     final constructorString = constructor.runtimeType.toString();
@@ -45,8 +52,7 @@ class Bind<T> {
       params: params,
       tag: tag,
       type: type,
-      onDispose: onDispose,
-      notifier: notifier,
+      config: config,
       instance: instance,
     );
   }
@@ -54,7 +60,7 @@ class Bind<T> {
   void callDispose() {
     final instance = this.instance;
     if (instance != null) {
-      onDispose?.call(instance);
+      config?.onDispose?.call(instance);
     }
   }
 
@@ -64,8 +70,7 @@ class Bind<T> {
     required this.params,
     required this.className,
     required this.tag,
-    this.onDispose,
-    this.notifier,
+    this.config,
     this.instance,
   });
 
@@ -76,8 +81,7 @@ class Bind<T> {
       params: params,
       className: className,
       tag: tag,
-      onDispose: onDispose,
-      notifier: notifier,
+      config: config,
     );
   }
 
@@ -89,8 +93,7 @@ class Bind<T> {
       className: className,
       tag: tag,
       instance: instance,
-      onDispose: onDispose,
-      notifier: notifier,
+      config: config,
     );
   }
 

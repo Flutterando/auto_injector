@@ -1,4 +1,5 @@
 import 'package:auto_injector/auto_injector.dart';
+import 'package:auto_injector/src/bind.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -358,13 +359,33 @@ TestDatasource not registred.\nTrace: TestController->TestRepository->TestDataso
     expect(instance, isA<InversionOfControlImplementation>());
   });
 
+  test('Dispose', () {
+    final injector = AutoInjector();
+    injector.addSingleton<String>(
+      () => '',
+      config: BindConfig(
+        notifier: (value) {
+          return 1;
+        },
+        onDispose: expectAsync1(
+          (p0) {
+            expect(p0, '');
+          },
+        ),
+      ),
+    );
+    injector.commit();
+    injector.disposeSingleton<String>();
+  });
   test('Notifier', () {
     final injector = AutoInjector();
-    injector.addInstance(
+    injector.addInstance<String>(
       '',
-      notifier: (value) {
-        return 1;
-      },
+      config: BindConfig(
+        notifier: (value) {
+          return 1;
+        },
+      ),
     );
     injector.commit();
     expect(injector.getNotifier<String>(), 1);

@@ -296,6 +296,25 @@ final homeModule = AutoInjector(
 ```
 
 <br>
+### <div id="bind-config">BindConfig</div>
+
+If there is a need to configure the dispose and notifier of the bind,
+use the `BindConfig<T>` property.
+This is very useful if you want to automate class disposes like BLoC or Triple Store:
+
+```dart
+final injector = AutoInjector();
+
+final config = BindConfig<Bloc>(
+  onDispose: (bloc) => bloc.close(),
+  onNotifier: (bloc) => bloc.stream,
+);
+
+injector.addSingleton(ProductBloc.new, config: config);
+
+```
+
+<br>
 
 _For more examples, please refer to the_ [Documentation](https://pub.dev/documentation/auto_injector/latest/) 
 
