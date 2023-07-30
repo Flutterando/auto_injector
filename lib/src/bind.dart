@@ -64,6 +64,12 @@ class Bind<T> {
     }
   }
 
+  dynamic getNotifier() {
+    if (instance != null && config?.notifier != null) {
+      return Function.apply(config!.notifier!, [instance]);
+    }
+  }
+
   Bind._({
     required this.constructor,
     required this.type,

@@ -228,15 +228,8 @@ class _AutoInjector extends AutoInjector {
   @override
   dynamic getNotifier<T>() {
     final className = T.toString();
-    final bind = _getBindByClassName(className) as Bind<T>?;
-
-    if (bind == null) {
-      return null;
-    }
-
-    if (bind.instance != null && bind.config?.notifier != null) {
-      return Function.apply(bind.config!.notifier!, [bind.instance]);
-    }
+    final bind = _getBindByClassName(className);
+    return bind?.getNotifier();
   }
 
   @override
@@ -536,6 +529,13 @@ It is recommended to call the "commit()" method after adding instances.'''
     T? instance,
     BindConfig<T>? config,
   }) {
+    assert(
+      config == null ||
+          !['dynamic', 'Object', 'Object?'] //
+              .contains(T.toString()),
+      'Added generic value in register. ex\n'
+      'injector.add<MyClasse>(MyClasse)',
+    );
     if (_commited) {
       throw AutoInjectorException(
         '''

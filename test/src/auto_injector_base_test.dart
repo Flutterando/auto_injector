@@ -1,5 +1,4 @@
 import 'package:auto_injector/auto_injector.dart';
-import 'package:auto_injector/src/bind.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -389,6 +388,21 @@ TestDatasource not registred.\nTrace: TestController->TestRepository->TestDataso
     );
     injector.commit();
     expect(injector.getNotifier<String>(), 1);
+  });
+  test('Notifier Assert if Generic Object', () {
+    final injector = AutoInjector();
+
+    expect(
+      () => injector.addInstance(
+        '',
+        config: BindConfig(
+          notifier: (value) {
+            return 1;
+          },
+        ),
+      ),
+      throwsA(isA<AssertionError>()),
+    );
   });
 
   test('removeByTag', () {
