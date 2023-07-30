@@ -1,6 +1,7 @@
-## 1.0.5 (2023-07-29)
+## 1.0.5+1 (2023-07-30)
 
 - fix: filter injectable params
+- chore: Separed Injector interface
 
 ## 1.0.4 (2023-06-29)
 

@@ -4,67 +4,13 @@ import 'bind.dart';
 import 'exceptions/exceptions.dart';
 import 'param.dart';
 
-/// Automatic Dependency Injection System, but without build_runner :)
-/// <br>
-/// `[tag]`: AutoInject instance identity.<br>
-/// `[on]`: Helps with instance registration.<br>
-/// `[paramObservers]`: List of functions that listen and transform
-/// parameters while they are being parsed when requested by the `get()` method.
-/// <br><br>
-/// ```dart
-/// final injector = AutoInjector();
-///
-/// injector.add(MyDatasource.new);
-///
-/// injector.get<MyDatasource>();
-/// ```
-abstract class AutoInjector {
-  final List<ParamTransform> _paramTransforms = [];
-
-  /// Helps with instance registration
-  final void Function(AutoInjector injector)? on;
-  final String _tag;
-
-  /// Only test
-  @visibleForTesting
-  int get bindLength;
-
-  /// Automatic Dependency Injection System, but without build_runner :)
-  /// <br>
-  /// `[tag]`: AutoInject instance identity.<br>
-  /// `[on]`: Helps with instance registration.<br>
-  /// `[paramObservers]`: List of functions that listen and transform
-  /// parameters while they are being parsed when
-  /// requested by the `get()` method.
-  /// <br><br>
-  /// ```dart
-  /// final injector = AutoInjector();
-  ///
-  /// injector.add(MyDatasource.new);
-  ///
-  /// injector.get<MyDatasource>();
-  /// ```
-  factory AutoInjector({
-    String? tag,
-    List<ParamTransform> paramTransforms = const [],
-    void Function(AutoInjector injector)? on,
-  }) {
-    tag ??= 'container:${DateTime.now().millisecondsSinceEpoch}-injector';
-    return _AutoInjector(tag, paramTransforms, on);
-  }
-
-  AutoInjector._(this._tag, List<ParamTransform> paramObservers, this.on) {
-    _paramTransforms.addAll(paramObservers);
-  }
-
+/// Register and get binds
+abstract class Injector {
   /// Request an instance by [Type]
   /// <br>
   /// [transform]: Transform a param. This can be used for example
   /// to replace an instance with a mock in tests.
   T get<T>({ParamTransform? transform});
-
-  /// Request an notifier propertie by [Type]
-  dynamic getNotifier<T>();
 
   /// Request an instance by [Type]
   /// <br>
@@ -74,13 +20,6 @@ abstract class AutoInjector {
     ParamTransform? transform,
   }) =>
       get<T>(transform: transform);
-
-  /// Request an instance by [Type] that when throwing an
-  /// exception returns null.
-  /// <br>
-  /// [transform]: Transform a param. This can be used for example
-  /// to replace an instance with a mock in tests.
-  T? tryGet<T>({ParamTransform? transform});
 
   /// Register a factory instance.
   /// A new instance will be generated whenever requested.
@@ -133,6 +72,70 @@ abstract class AutoInjector {
     DisposeCallback<T>? onDispose,
     NotifierCallback<T>? notifier,
   });
+}
+
+/// Automatic Dependency Injection System, but without build_runner :)
+/// <br>
+/// `[tag]`: AutoInject instance identity.<br>
+/// `[on]`: Helps with instance registration.<br>
+/// `[paramObservers]`: List of functions that listen and transform
+/// parameters while they are being parsed when requested by the `get()` method.
+/// <br><br>
+/// ```dart
+/// final injector = AutoInjector();
+///
+/// injector.add(MyDatasource.new);
+///
+/// injector.get<MyDatasource>();
+/// ```
+abstract class AutoInjector extends Injector {
+  final List<ParamTransform> _paramTransforms = [];
+
+  /// Helps with instance registration
+  final void Function(AutoInjector injector)? on;
+  final String _tag;
+
+  /// Only test
+  @visibleForTesting
+  int get bindLength;
+
+  /// Automatic Dependency Injection System, but without build_runner :)
+  /// <br>
+  /// `[tag]`: AutoInject instance identity.<br>
+  /// `[on]`: Helps with instance registration.<br>
+  /// `[paramObservers]`: List of functions that listen and transform
+  /// parameters while they are being parsed when
+  /// requested by the `get()` method.
+  /// <br><br>
+  /// ```dart
+  /// final injector = AutoInjector();
+  ///
+  /// injector.add(MyDatasource.new);
+  ///
+  /// injector.get<MyDatasource>();
+  /// ```
+  factory AutoInjector({
+    String? tag,
+    List<ParamTransform> paramTransforms = const [],
+    void Function(AutoInjector injector)? on,
+  }) {
+    tag ??= 'container:${DateTime.now().millisecondsSinceEpoch}-injector';
+    return _AutoInjector(tag, paramTransforms, on);
+  }
+
+  AutoInjector._(this._tag, List<ParamTransform> paramObservers, this.on) {
+    _paramTransforms.addAll(paramObservers);
+  }
+
+  /// Request an instance by [Type] that when throwing an
+  /// exception returns null.
+  /// <br>
+  /// [transform]: Transform a param. This can be used for example
+  /// to replace an instance with a mock in tests.
+  T? tryGet<T>({ParamTransform? transform});
+
+  /// Request an notifier propertie by [Type]
+  dynamic getNotifier<T>();
 
   /// Inherit all instances and transforms from other AutoInjector object.
   /// ```dart
