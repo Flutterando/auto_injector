@@ -10,7 +10,6 @@ build/
 pubspec.lock
 
 coverage/
-example/
 doc/
 readme_assets/
 test/
