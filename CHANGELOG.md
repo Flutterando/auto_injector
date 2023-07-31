@@ -1,8 +1,13 @@
-## 1.0.5+3 (2023-07-31)
+## 1.1.0+4 (2023-07-31)
+
+- add: BindConfig
+- chore: Update Exceptions
+
+
+## 1.0.5+2 (2023-07-30)
 
 - fix: filter injectable params
 - chore: Separed Injector interface
-- chore: Update Exceptions
 
 ## 1.0.4 (2023-06-29)
 

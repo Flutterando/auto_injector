@@ -1,3 +1,4 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:meta/meta.dart';
 
 import 'bind.dart';
@@ -29,8 +30,7 @@ abstract class Injector {
   void add<T>(
     Function constructor, {
     String? tag,
-    DisposeCallback<T>? onDispose,
-    NotifierCallback<T>? notifier,
+    BindConfig<T>? config,
   });
 
   /// Register a instance.
@@ -41,8 +41,7 @@ abstract class Injector {
   void addInstance<T>(
     T instance, {
     String? tag,
-    DisposeCallback<T>? onDispose,
-    NotifierCallback<T>? notifier,
+    BindConfig<T>? config,
   });
 
   /// Register a Singleton instance.
@@ -55,8 +54,7 @@ abstract class Injector {
   void addSingleton<T>(
     Function constructor, {
     String? tag,
-    DisposeCallback<T>? onDispose,
-    NotifierCallback<T>? notifier,
+    BindConfig<T>? config,
   });
 
   /// Register a LazySingleton instance.
@@ -69,8 +67,7 @@ abstract class Injector {
   void addLazySingleton<T>(
     Function constructor, {
     String? tag,
-    DisposeCallback<T>? onDispose,
-    NotifierCallback<T>? notifier,
+    BindConfig<T>? config,
   });
 
   /// Request an notifier propertie by [Type]
@@ -232,24 +229,19 @@ class _AutoInjector extends AutoInjector {
   dynamic getNotifier<T>() {
     final className = T.toString();
     final bind = _getBindByClassName(className);
-
-    if (bind?.instance != null && bind?.notifier != null) {
-      return Function.apply(bind!.notifier!, [bind.instance]);
-    }
+    return bind?.getNotifier();
   }
 
   @override
   void add<T>(
     Function constructor, {
     String? tag,
-    DisposeCallback<T>? onDispose,
-    NotifierCallback<T>? notifier,
+    BindConfig<T>? config,
   }) {
     _add<T>(
       constructor,
       tag ?? _tag,
-      onDispose: onDispose,
-      notifier: notifier,
+      config: config,
     );
   }
 
@@ -257,16 +249,14 @@ class _AutoInjector extends AutoInjector {
   void addInstance<T>(
     T instance, {
     String? tag,
-    DisposeCallback<T>? onDispose,
-    NotifierCallback<T>? notifier,
+    BindConfig<T>? config,
   }) {
     _add<T>(
       () => instance,
       tag ?? _tag,
       type: BindType.instance,
       instance: instance,
-      onDispose: onDispose,
-      notifier: notifier,
+      config: config,
     );
   }
 
@@ -274,15 +264,13 @@ class _AutoInjector extends AutoInjector {
   void addSingleton<T>(
     Function constructor, {
     String? tag,
-    DisposeCallback<T>? onDispose,
-    NotifierCallback<T>? notifier,
+    BindConfig<T>? config,
   }) {
     _add<T>(
       constructor,
       tag ?? _tag,
       type: BindType.singleton,
-      onDispose: onDispose,
-      notifier: notifier,
+      config: config,
     );
   }
 
@@ -290,15 +278,13 @@ class _AutoInjector extends AutoInjector {
   void addLazySingleton<T>(
     Function constructor, {
     String? tag,
-    DisposeCallback<T>? onDispose,
-    NotifierCallback<T>? notifier,
+    BindConfig<T>? config,
   }) =>
       _add<T>(
         constructor,
         tag ?? _tag,
         type: BindType.lazySingleton,
-        onDispose: onDispose,
-        notifier: notifier,
+        config: config,
       );
 
   @override
@@ -350,7 +336,7 @@ class _AutoInjector extends AutoInjector {
     _binds.removeWhere((bind) {
       final condition = bind.tag == tag;
       if (condition && bind.instance != null) {
-        bind.onDispose?.call(bind.instance);
+        bind.config?.onDispose?.call(bind.instance);
       }
 
       return condition;
@@ -541,9 +527,15 @@ It is recommended to call the "commit()" method after adding instances.'''
     String tag, {
     BindType type = BindType.factory,
     T? instance,
-    DisposeCallback<T>? onDispose,
-    NotifierCallback<T>? notifier,
+    BindConfig<T>? config,
   }) {
+    assert(
+      config == null ||
+          !['dynamic', 'Object', 'Object?'] //
+              .contains(T.toString()),
+      'Added generic value in register. ex\n'
+      'injector.add<MyClasse>(MyClasse)',
+    );
     if (_commited) {
       throw AutoInjectorException(
         '''
@@ -557,8 +549,7 @@ Injector commited!\nCannot add new instances, however can still use replace meth
       constructor: constructor,
       type: type,
       tag: tag,
-      onDispose: onDispose,
-      notifier: notifier,
+      config: config,
       instance: instance,
     );
 

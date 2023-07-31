@@ -25,7 +25,9 @@ void main() {
     expect(injector.hasTag(tag), true);
   });
 
-  test('AutoInjector: add with dynamic must return AutoInjector instance', () async {
+  test(
+      'AutoInjector: add with dynamic '
+      'must return AutoInjector instance', () async {
     expect(injector.isAdded<TestDatasource>(), false);
 
     injector.add(TestDatasource.new);
@@ -358,16 +360,51 @@ TestDatasource not registred.\nTrace: TestController->TestRepository->TestDataso
     expect(instance, isA<InversionOfControlImplementation>());
   });
 
+  test('Dispose', () {
+    final injector = AutoInjector();
+    injector.addSingleton<String>(
+      () => '',
+      config: BindConfig(
+        notifier: (value) {
+          return 1;
+        },
+        onDispose: expectAsync1(
+          (p0) {
+            expect(p0, '');
+          },
+        ),
+      ),
+    );
+    injector.commit();
+    injector.disposeSingleton<String>();
+  });
   test('Notifier', () {
     final injector = AutoInjector();
-    injector.addInstance(
+    injector.addInstance<String>(
       '',
-      notifier: (value) {
-        return 1;
-      },
+      config: BindConfig(
+        notifier: (value) {
+          return 1;
+        },
+      ),
     );
     injector.commit();
     expect(injector.getNotifier<String>(), 1);
+  });
+  test('Notifier Assert if Generic Object', () {
+    final injector = AutoInjector();
+
+    expect(
+      () => injector.addInstance(
+        '',
+        config: BindConfig(
+          notifier: (value) {
+            return 1;
+          },
+        ),
+      ),
+      throwsA(isA<AssertionError>()),
+    );
   });
 
   test('removeByTag', () {
