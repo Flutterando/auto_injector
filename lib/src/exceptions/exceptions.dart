@@ -45,4 +45,14 @@ class UnregisteredInstance extends AutoInjectorException {
 
   @override
   String get _typeName => 'UnregisteredInstance';
+
+  @override
+  String toString() {
+    var message = '$_typeName: ${this.message}\n${classNames.join(' => ')}';
+    if (stackTrace != null) {
+      message = '$message\n$stackTrace';
+    }
+
+    return message;
+  }
 }
