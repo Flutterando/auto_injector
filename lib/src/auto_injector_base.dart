@@ -185,6 +185,7 @@ abstract class AutoInjector extends Injector {
 
 class _AutoInjector extends AutoInjector {
   final _binds = <Bind>[];
+  final _injectorsList = <_AutoInjector>[];
   var _commited = false;
 
   @override
@@ -289,16 +290,7 @@ class _AutoInjector extends AutoInjector {
 
   @override
   void addInjector(covariant _AutoInjector injector) {
-    for (final bind in injector._binds) {
-      final index = _binds.indexWhere(
-        (bindElement) => bindElement.className == bind.className,
-      );
-      if (index == -1) {
-        _binds.add(bind);
-      }
-    }
-
-    _paramTransforms.addAll(injector._paramTransforms);
+    _injectorsList.add(injector);
   }
 
   @override
@@ -334,13 +326,17 @@ class _AutoInjector extends AutoInjector {
   @override
   void removeByTag(String tag) {
     _binds.removeWhere((bind) {
-      final condition = bind.tag == tag;
-      if (condition && bind.instance != null) {
+      final isCurrentTag = bind.tag == tag;
+      if (isCurrentTag && bind.instance != null) {
         bind.config?.onDispose?.call(bind.instance);
       }
 
-      return condition;
+      return isCurrentTag;
     });
+    
+    for (final innerInjector in _injectorsList) {
+      innerInjector.removeByTag(tag);
+    }
   }
 
   @override
@@ -418,6 +414,11 @@ It is recommended to call the "commit()" method after adding instances.'''
     var bind = _getBindByClassName(className);
 
     if (bind == null) {
+      for (final innerInjector in _injectorsList) {
+        final instance =
+            innerInjector._resolveInstanceByClassName(className, transform);
+        if (instance != null) return instance;
+      }
       return null;
     }
 
@@ -441,7 +442,6 @@ It is recommended to call the "commit()" method after adding instances.'''
           (bind) => bind?.className == className,
           orElse: () => null,
         );
-
     return bind;
   }
 
@@ -570,7 +570,8 @@ Injector commited!\nCannot add new instances, however can still use replace meth
 
   dynamic _disposeSingletonByClasseName(String className) {
     final index = _binds.indexWhere((bind) => bind.className == className);
-    if (index != -1) {
+    final existsBind = index != -1;
+    if (existsBind) {
       final bind = _binds[index];
       final instance = bind.instance;
       if (bind.instance == null) {
@@ -580,6 +581,11 @@ Injector commited!\nCannot add new instances, however can still use replace meth
       _binds[index] = bind.removeInstance();
 
       return instance;
+    } else {
+      for (final subInjector in _injectorsList) {
+        final instance = subInjector._disposeSingletonByClasseName(className);
+        if (instance != null) return instance;
+      }
     }
     return null;
   }
