@@ -425,6 +425,13 @@ TestDatasource not registred.\nTrace: TestController->TestRepository->TestDataso
     expect(injector.bindLength, 2);
     expect(injector.get<WithNullableParams>(), isA<WithNullableParams>());
   });
+
+  test('Added same classname binds with tag diff', () {
+    injector.addInstance('String', tag: '1');
+    injector.addInstance('String', tag: '2');
+
+    expect(injector.bindLength, 2);
+  });
 }
 
 class WithNullableParams {

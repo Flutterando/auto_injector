@@ -144,7 +144,7 @@ abstract class AutoInjector extends Injector {
   void addInjector(AutoInjector injector);
 
   /// Checks if the instance record exists.
-  bool isAdded<T>();
+  bool isAdded<T>([String? tag]);
 
   /// checks if the instance registration is as singleton.
   bool isInstantiateSingleton<T>();
@@ -290,9 +290,7 @@ class _AutoInjector extends AutoInjector {
   @override
   void addInjector(covariant _AutoInjector injector) {
     for (final bind in injector._binds) {
-      final index = _binds.indexWhere(
-        (bindElement) => bindElement.className == bind.className,
-      );
+      final index = _binds.indexWhere(bind.compare);
       if (index == -1) {
         _binds.add(bind);
       }
@@ -302,7 +300,14 @@ class _AutoInjector extends AutoInjector {
   }
 
   @override
-  bool isAdded<T>() => _isAddedByClassName(T.toString());
+  bool isAdded<T>([String? tag]) {
+    tag ??= _tag;
+    final searchBind = Bind.empty(
+      T.toString(),
+      tag,
+    );
+    return _binds.any(searchBind.compare);
+  }
 
   @override
   bool isInstantiateSingleton<T>() {
@@ -346,13 +351,15 @@ class _AutoInjector extends AutoInjector {
   @override
   void replaceInstance<T>(T instance) {
     final className = T.toString();
-    if (!_isAddedByClassName(className)) {
+
+    final index = _binds.indexWhere((bind) => bind.className == className);
+
+    if (index == -1) {
       throw AutoInjectorException(
         '$className cannot be replaced as it was not added before.',
         StackTrace.current,
       );
     }
-    final index = _binds.indexWhere((bind) => bind.className == className);
 
     final bind = Bind<T>(
       constructor: () => instance,
@@ -553,7 +560,7 @@ Injector commited!\nCannot add new instances, however can still use replace meth
       instance: instance,
     );
 
-    if (_isAddedByClassName(bind.className)) {
+    if (_isAddedBind(bind)) {
       throw AutoInjectorException(
         '${bind.className} Class is already added.',
         StackTrace.current,
@@ -563,8 +570,8 @@ Injector commited!\nCannot add new instances, however can still use replace meth
     _binds.add(bind);
   }
 
-  bool _isAddedByClassName(String className) {
-    final index = _binds.indexWhere((bind) => bind.className == className);
+  bool _isAddedBind(Bind bind) {
+    final index = _binds.indexWhere(bind.compare);
     return index != -1;
   }
 

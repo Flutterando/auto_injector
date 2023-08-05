@@ -57,6 +57,16 @@ class Bind<T> {
     );
   }
 
+  factory Bind.empty(String className, String tag) {
+    return Bind<T>._(
+      constructor: () => null,
+      className: className,
+      params: [],
+      tag: tag,
+      type: BindType.factory,
+    );
+  }
+
   void callDispose() {
     final instance = this.instance;
     if (instance != null) {
@@ -167,5 +177,9 @@ class Bind<T> {
 
     final className = constructorString.split(' => ').last;
     return className;
+  }
+
+  bool compare(Bind bind) {
+    return className == bind.className && tag == bind.tag;
   }
 }
