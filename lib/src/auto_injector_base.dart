@@ -1,9 +1,14 @@
-// ignore_for_file: public_member_api_docs, sort_constructors_first
+// ignore_for_file: public_member_api_docs, sort_constructors_first, lines_longer_than_80_chars
+import 'dart:collection';
+
 import 'package:meta/meta.dart';
+import 'package:uuid/uuid.dart';
 
 import 'bind.dart';
 import 'exceptions/exceptions.dart';
 import 'param.dart';
+
+part 'graph.dart';
 
 /// Register and get binds
 abstract class Injector {
@@ -119,8 +124,8 @@ abstract class AutoInjector extends Injector {
     List<ParamTransform> paramTransforms = const [],
     void Function(AutoInjector injector)? on,
   }) {
-    tag ??= 'container:${DateTime.now().millisecondsSinceEpoch}-injector';
-    return _AutoInjector(tag, paramTransforms, on);
+    tag ??= const Uuid().v4();
+    return AutoInjectorImpl(tag, paramTransforms, on);
   }
 
   AutoInjector._(this._tag, List<ParamTransform> paramObservers, this.on) {
@@ -183,15 +188,22 @@ abstract class AutoInjector extends Injector {
   void removeAll();
 }
 
-class _AutoInjector extends AutoInjector {
-  final _binds = <Bind>[];
-  final _injectorsList = <_AutoInjector>[];
-  var _commited = false;
+class AutoInjectorImpl extends AutoInjector {
+  @visibleForTesting
+  final binds = <Bind>[];
+
+  @visibleForTesting
+  final injectorsList = <AutoInjectorImpl>[];
+
+  @visibleForTesting
+  bool commited = false;
+
+  final graph = Graph();
 
   @override
-  int get bindLength => _binds.length;
+  int get bindLength => binds.length;
 
-  _AutoInjector(
+  AutoInjectorImpl(
     String tag,
     List<ParamTransform> paramTransforms,
     void Function(AutoInjector injector)? on,
@@ -289,8 +301,8 @@ class _AutoInjector extends AutoInjector {
       );
 
   @override
-  void addInjector(covariant _AutoInjector injector) {
-    _injectorsList.add(injector);
+  void addInjector(covariant AutoInjectorImpl injector) {
+    injectorsList.add(injector);
   }
 
   @override
@@ -314,7 +326,7 @@ class _AutoInjector extends AutoInjector {
     void Function(dynamic instance)? onRemoved,
   }) {
     final taggedBinds = List<Bind>.from(
-      _binds.where((bind) => bind.tag == tag),
+      binds.where((bind) => bind.tag == tag),
     );
     for (var index = 0; index < taggedBinds.length; index++) {
       final bind = taggedBinds[index];
@@ -325,7 +337,7 @@ class _AutoInjector extends AutoInjector {
 
   @override
   void removeByTag(String tag) {
-    _binds.removeWhere((bind) {
+    binds.removeWhere((bind) {
       final isCurrentTag = bind.tag == tag;
       if (isCurrentTag && bind.instance != null) {
         bind.config?.onDispose?.call(bind.instance);
@@ -333,8 +345,8 @@ class _AutoInjector extends AutoInjector {
 
       return isCurrentTag;
     });
-    
-    for (final innerInjector in _injectorsList) {
+
+    for (final innerInjector in injectorsList) {
       innerInjector.removeByTag(tag);
     }
   }
@@ -342,39 +354,58 @@ class _AutoInjector extends AutoInjector {
   @override
   void replaceInstance<T>(T instance) {
     final className = T.toString();
-    if (!_isAddedByClassName(className)) {
+
+    final data = graph.getBindByClassName(this, className: className);
+    if (data == null) {
       throw AutoInjectorException(
         '$className cannot be replaced as it was not added before.',
         StackTrace.current,
       );
     }
-    final index = _binds.indexWhere((bind) => bind.className == className);
+    final injector = data.key;
 
-    final bind = Bind<T>(
+    final index = injector.binds //
+        .indexWhere((bind) => bind.className == className);
+
+    final newBind = Bind<T>(
       constructor: () => instance,
       type: BindType.instance,
-      tag: _binds[index].tag,
+      tag: injector.binds[index].tag,
       instance: instance,
     );
 
-    _binds[index] = bind;
+    injector.binds[index] = newBind;
   }
 
   @override
   void commit() {
-    _commited = true;
-    _binds //
+    if (commited) throw InjectorAlreadyCommited(_tag);
+
+    commited = true;
+
+    graph.addInjectorRecursive(this);
+    graph.executeInAllInjectors(this, (injector) {
+      final isCurrentInjector = injector._tag == _tag;
+      if (!isCurrentInjector && !injector.commited) {
+        injector.commit();
+      }
+    });
+    startSingletons();
+  }
+
+  void startSingletons() {
+    binds //
         .where((bind) => bind.type == BindType.singleton)
         .map((bind) => bind.className)
         .forEach(_resolveInstanceByClassName);
   }
 
   @override
-  void uncommit() => _commited = false;
+  void uncommit() => commited = false;
 
   @override
   bool hasTag(String tag) {
-    for (final bind in _binds) {
+    for (final bind in binds) {
       if (bind.tag == tag) {
         return true;
       }
@@ -384,7 +415,7 @@ class _AutoInjector extends AutoInjector {
   }
 
   void _checkAutoInjectorIsCommited() {
-    if (!_commited) {
+    if (!commited) {
       final message = '''
 The injector(tag: $_tag) is not committed.
 It is recommended to call the "commit()" method after adding instances.'''
@@ -395,7 +426,7 @@ It is recommended to call the "commit()" method after adding instances.'''
 
   @override
   void removeAll() {
-    _binds.clear();
+    binds.clear();
   }
 
   UnregisteredInstance _prepareExceptionTrace(UnregisteredInstance exception) {
@@ -411,32 +442,27 @@ It is recommended to call the "commit()" method after adding instances.'''
     String className, [
     ParamTransform? transform,
   ]) {
-    var bind = _getBindByClassName(className);
+    final data = graph.getBindByClassName(this, className: className);
+    if (data == null) return null;
 
-    if (bind == null) {
-      for (final innerInjector in _injectorsList) {
-        final instance =
-            innerInjector._resolveInstanceByClassName(className, transform);
-        if (instance != null) return instance;
-      }
-      return null;
-    }
+    final injectorOwner = data.key;
+    final bind = data.value;
 
     if (bind.hasInstance) {
       return bind.instance;
     }
 
-    bind = _resolveBind(bind, transform);
+    final bindWithInstance = injectorOwner._resolveBind(bind, transform);
 
-    if (bind.type.isSingleton) {
-      _updateBinds(bind);
+    if (bindWithInstance.type.isSingleton) {
+      injectorOwner._updateBinds(bindWithInstance);
     }
 
-    return bind.instance;
+    return bindWithInstance.instance;
   }
 
   Bind? _getBindByClassName(String className) {
-    final bind = _binds
+    final bind = binds
         .cast<Bind?>() //
         .firstWhere(
           (bind) => bind?.className == className,
@@ -492,7 +518,7 @@ It is recommended to call the "commit()" method after adding instances.'''
       if (!param.isNullable && instance == null) {
         throw UnregisteredInstance(
           [param.className],
-          '${param.className} not registred.',
+          '${param.className} not registered.',
         );
       }
 
@@ -514,11 +540,11 @@ It is recommended to call the "commit()" method after adding instances.'''
   }
 
   void _updateBinds(Bind bind) {
-    final index = _binds.indexWhere(
+    final index = binds.indexWhere(
       (bindElement) => bindElement.className == bind.className,
     );
     if (index != -1) {
-      _binds[index] = bind;
+      binds[index] = bind;
     }
   }
 
@@ -536,7 +562,7 @@ It is recommended to call the "commit()" method after adding instances.'''
       'Added generic value in register. ex\n'
       'injector.add<MyClasse>(MyClasse)',
     );
-    if (_commited) {
+    if (commited) {
       throw AutoInjectorException(
         '''
 Injector commited!\nCannot add new instances, however can still use replace methods.'''
@@ -560,29 +586,29 @@ Injector commited!\nCannot add new instances, however can still use replace meth
       );
     }
 
-    _binds.add(bind);
+    binds.add(bind);
   }
 
   bool _isAddedByClassName(String className) {
-    final index = _binds.indexWhere((bind) => bind.className == className);
+    final index = binds.indexWhere((bind) => bind.className == className);
     return index != -1;
   }
 
   dynamic _disposeSingletonByClasseName(String className) {
-    final index = _binds.indexWhere((bind) => bind.className == className);
+    final index = binds.indexWhere((bind) => bind.className == className);
     final existsBind = index != -1;
     if (existsBind) {
-      final bind = _binds[index];
+      final bind = binds[index];
       final instance = bind.instance;
       if (bind.instance == null) {
         return null;
       }
       bind.callDispose();
-      _binds[index] = bind.removeInstance();
+      binds[index] = bind.removeInstance();
 
       return instance;
     } else {
-      for (final subInjector in _injectorsList) {
+      for (final subInjector in injectorsList) {
         final instance = subInjector._disposeSingletonByClasseName(className);
         if (instance != null) return instance;
       }
