@@ -1,3 +1,8 @@
+## 1.2.0 (2023-08-09)
+
+- fix: replace with others tags
+- add: Tags getter
+
 ## 1.1.1 (2023-08-05)
 
 - fix: allow add same bind with tag diff

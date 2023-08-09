@@ -95,6 +95,8 @@ abstract class AutoInjector extends Injector {
   final void Function(AutoInjector injector)? on;
   final String _tag;
 
+  Set<String> get tags;
+
   /// Only test
   @visibleForTesting
   int get bindLength;
@@ -169,7 +171,7 @@ abstract class AutoInjector extends Injector {
   /// Replaces an instance record with a concrete instance.<br>
   /// This function should only be used for unit testing.<br>
   /// Any other use is discouraged.
-  void replaceInstance<T>(T instance);
+  void replaceInstance<T>(T instance, [String? tag]);
 
   /// Informs the container that the additions
   /// are finished and the injector is ready to be used.<br>
@@ -189,6 +191,11 @@ class _AutoInjector extends AutoInjector {
 
   @override
   int get bindLength => _binds.length;
+
+  @override
+  Set<String> get tags {
+    return _binds.map((b) => b.tag).toSet();
+  }
 
   _AutoInjector(
     String tag,
@@ -349,10 +356,16 @@ class _AutoInjector extends AutoInjector {
   }
 
   @override
-  void replaceInstance<T>(T instance) {
+  void replaceInstance<T>(T instance, [String? tag]) {
     final className = T.toString();
+    tag ??= _tag;
 
-    final index = _binds.indexWhere((bind) => bind.className == className);
+    final searchBind = Bind.empty(
+      T.toString(),
+      tag,
+    );
+
+    final index = _binds.indexWhere(searchBind.compare);
 
     if (index == -1) {
       throw AutoInjectorException(
