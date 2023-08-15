@@ -1,4 +1,5 @@
 import 'package:auto_injector/auto_injector.dart';
+import 'package:auto_injector/src/auto_injector_base.dart';
 import 'package:test/test.dart';
 
 void main() {
