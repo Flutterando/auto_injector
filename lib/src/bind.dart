@@ -54,6 +54,15 @@ class Bind<T> {
     );
   }
 
+  factory Bind.empty(String className) {
+    return Bind<T>._(
+      constructor: () => null,
+      className: className,
+      params: [],
+      type: BindType.factory,
+    );
+  }
+
   void callDispose() {
     final instance = this.instance;
     if (instance != null) {
