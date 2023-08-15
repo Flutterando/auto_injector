@@ -293,7 +293,7 @@ class AutoInjectorImpl extends AutoInjector {
     final data = layersGraph.getBindByClassName(this, className: className);
     if (data == null) {
       throw AutoInjectorException(
-        '$className cannot be replaced as it was not added before.',
+        '$className cannot be replaced because it was not added before.',
         StackTrace.current,
       );
     }
