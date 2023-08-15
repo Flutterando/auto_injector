@@ -8,7 +8,7 @@ import 'bind.dart';
 import 'exceptions/exceptions.dart';
 import 'param.dart';
 
-part 'graph.dart';
+part 'layers_graph.dart';
 
 /// Register and get binds
 abstract class Injector {
@@ -401,7 +401,7 @@ It is recommended to call the "commit()" method after adding instances.'''
       positionalParams,
       namedParams,
     );
-    return bind.addInstance(instance);
+    return bind.withInstance(instance);
   }
 
   List<Param> _resolveParam(
@@ -495,24 +495,17 @@ Injector commited!\nCannot add new instances, however can still use replace meth
   }
 
   dynamic _disposeSingletonByClasseName(String className) {
-    final index = binds.indexWhere((bind) => bind.className == className);
-    final existsBind = index != -1;
-    if (existsBind) {
-      final bind = binds[index];
-      final instance = bind.instance;
-      if (bind.instance == null) {
-        return null;
-      }
-      bind.callDispose();
-      binds[index] = bind.removeInstance();
+    final data = layersGraph.getBindByClassName(this, className: className);
+    if (data == null) return null;
 
-      return instance;
-    } else {
-      for (final subInjector in injectorsList) {
-        final instance = subInjector._disposeSingletonByClasseName(className);
-        if (instance != null) return instance;
-      }
-    }
-    return null;
+    final bind = data.value;
+    if (!bind.hasInstance) return null;
+
+    bind.callDispose();
+    final injectorOwnsBind = data.key;
+    final indexBind = injectorOwnsBind.binds
+        .indexWhere((bind) => bind.className == className);
+    injectorOwnsBind.binds[indexBind] = bind.withoutInstance();
+    return bind.instance;
   }
 }

@@ -76,7 +76,7 @@ class Bind<T> {
     this.instance,
   });
 
-  Bind<T> removeInstance() {
+  Bind<T> withoutInstance() {
     return Bind<T>._(
       constructor: constructor,
       type: type,
@@ -86,7 +86,7 @@ class Bind<T> {
     );
   }
 
-  Bind<T> addInstance(T instance) {
+  Bind<T> withInstance(T instance) {
     return Bind<T>._(
       constructor: constructor,
       type: type,
