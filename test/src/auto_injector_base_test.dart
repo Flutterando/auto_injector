@@ -6,7 +6,7 @@ void main() {
 
   setUp(() {
     injector = AutoInjector();
-    injector.removeAll();
+    injector.disposeRecursive();
   });
 
   test('AutoInjector: add', () async {

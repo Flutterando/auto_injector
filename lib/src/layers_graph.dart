@@ -14,17 +14,7 @@ class LayersGraph {
   void addInjectorRecursive(AutoInjectorImpl injector) {
     addInjector(injector);
     for (final innerInjector in injector.injectorsList) {
-      addEdge(injector, innerInjector);
-      addInjectorRecursive(innerInjector);
-    }
-  }
-
-  void executeRecursive(
-    AutoInjectorImpl injector,
-  ) {
-    addInjector(injector);
-    for (final innerInjector in injector.injectorsList) {
-      addEdge(injector, innerInjector);
+      _addEdge(injector, innerInjector);
       addInjectorRecursive(innerInjector);
     }
   }
@@ -34,7 +24,7 @@ class LayersGraph {
     adjacencyList[module] = [];
   }
 
-  void addEdge(AutoInjectorImpl source, AutoInjectorImpl target) {
+  void _addEdge(AutoInjectorImpl source, AutoInjectorImpl target) {
     adjacencyList[source]?.add(target);
   }
 
@@ -70,6 +60,8 @@ class LayersGraph {
       final currentInjector = queue.removeFirst();
       callback(currentInjector);
 
+      if (adjacencyList[currentInjector] == null) continue;
+
       for (final adjacentInjector in adjacencyList[currentInjector]!) {
         if (!visited.contains(adjacentInjector)) {
           visited.add(adjacentInjector);
@@ -94,15 +86,21 @@ class LayersGraph {
       if (validation(currentInjector)) {
         return currentInjector;
       }
-      if (adjacencyList[currentInjector] != null) {
-        for (final adjacentInjector in adjacencyList[currentInjector]!) {
-          if (!visited.contains(adjacentInjector)) {
-            visited.add(adjacentInjector);
-            queue.add(adjacentInjector);
-          }
+
+      if (adjacencyList[currentInjector] == null) continue;
+
+      for (final adjacentInjector in adjacencyList[currentInjector]!) {
+        if (!visited.contains(adjacentInjector)) {
+          visited.add(adjacentInjector);
+          queue.add(adjacentInjector);
         }
       }
     }
     return null;
+  }
+
+  void reset() {
+    modules.clear();
+    adjacencyList.clear();
   }
 }

@@ -200,6 +200,31 @@ void main() {
     //   });
     // });
 
+    group('disposeInjectorByTag', () {
+      test('should remove the inner injector named with this tag', () {
+        const innerInjectorTag = 'inner-injector-tag';
+        final innerInjector = AutoInjector(
+          tag: innerInjectorTag,
+          on: (i) {
+            i.addLazySingleton(Class1.new);
+          },
+        ) as AutoInjectorImpl;
+
+        final parentInjector = AutoInjector(
+          on: (i) {
+            i.addInjector(innerInjector);
+            i.commit();
+          },
+        );
+
+        parentInjector.disposeInjectorByTag(innerInjectorTag);
+        expect(innerInjector.commited, false);
+        expect(innerInjector.binds.isEmpty, true);
+        expect(innerInjector.layersGraph.adjacencyList.isEmpty, true);
+        expect(innerInjector.layersGraph.modules.isEmpty, true);
+      });
+    });
+
     group('Recursive Commit: ', () {
       test('should be recursive', () {
         final innerInjector = AutoInjector() as AutoInjectorImpl;

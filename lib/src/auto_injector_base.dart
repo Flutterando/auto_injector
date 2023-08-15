@@ -152,8 +152,14 @@ abstract class AutoInjector extends Injector {
   /// remove commit
   void uncommit();
 
-  /// Remove all regiters
-  void removeAll();
+  /// Remove all the binds and turns the injector uncommitted
+  void dispose();
+
+  /// Execute "dispose()" in all the injectors from this layers tree
+  void disposeRecursive();
+
+  /// Find the injector in the layers tree and execute "dispose()" on it
+  void disposeInjectorByTag(String injectorTag);
 }
 
 class AutoInjectorImpl extends AutoInjector {
@@ -327,8 +333,26 @@ It is recommended to call the "commit()" method after adding instances.'''
   }
 
   @override
-  void removeAll() {
+  void dispose() {
     binds.clear();
+    layersGraph.reset();
+    commited = false;
+  }
+
+  @override
+  void disposeRecursive() {
+    layersGraph.executeInAllInjectors(this, (i) {
+      if (i._tag != _tag) i.dispose();
+    });
+    // The current is the last to be disposed because it cleans the layersGraph
+    dispose();
+  }
+
+  @override
+  void disposeInjectorByTag(String injectorTag) {
+    layersGraph.executeInAllInjectors(this, (injector) {
+      if (injector._tag == injectorTag) injector.dispose();
+    });
   }
 
   UnregisteredInstance _prepareExceptionTrace(UnregisteredInstance exception) {
