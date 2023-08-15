@@ -228,7 +228,8 @@ class AutoInjectorImpl extends AutoInjector {
   @override
   dynamic getNotifier<T>() {
     final className = T.toString();
-    final bind = _getBindByClassName(className);
+    final data = layersGraph.getBindByClassName(this, className: className);
+    final bind = data?.value;
     return bind?.getNotifier();
   }
 
@@ -275,7 +276,8 @@ class AutoInjectorImpl extends AutoInjector {
   @override
   bool isInstantiateSingleton<T>() {
     final className = T.toString();
-    final bind = _getBindByClassName(className);
+    final data = layersGraph.getBindByClassName(this, className: className);
+    final bind = data?.value;
     return bind?.hasInstance ?? false;
   }
 
@@ -412,16 +414,6 @@ It is recommended to call the "commit()" method after adding instances.'''
     }
 
     return bindWithInstance.instance;
-  }
-
-  Bind? _getBindByClassName(String className) {
-    final bind = binds
-        .cast<Bind?>() //
-        .firstWhere(
-          (bind) => bind?.className == className,
-          orElse: () => null,
-        );
-    return bind;
   }
 
   Bind _resolveBind(

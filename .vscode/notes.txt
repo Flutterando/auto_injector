@@ -1,5 +1,0 @@
-TODO
- - Use Graph to remove bind;
- - Create way to remove injector;
- - Create dispose injector (should update graph);
- - Fix getNotifier();
