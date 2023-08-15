@@ -3,4 +3,3 @@ TODO
  - Create way to remove injector;
  - Create dispose injector (should update graph);
  - Fix getNotifier();
- - Use Graph to getByTag();

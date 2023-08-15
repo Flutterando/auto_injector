@@ -30,7 +30,6 @@ class Bind<T> {
   final BindType type;
   final List<Param> params;
   final String className;
-  final String tag;
   final T? instance;
   final BindConfig<T>? config;
 
@@ -39,7 +38,6 @@ class Bind<T> {
   factory Bind({
     required Function constructor,
     required BindType type,
-    required String tag,
     BindConfig<T>? config,
     T? instance,
   }) {
@@ -50,7 +48,6 @@ class Bind<T> {
       constructor: constructor,
       className: className,
       params: params,
-      tag: tag,
       type: type,
       config: config,
       instance: instance,
@@ -75,7 +72,6 @@ class Bind<T> {
     required this.type,
     required this.params,
     required this.className,
-    required this.tag,
     this.config,
     this.instance,
   });
@@ -86,7 +82,6 @@ class Bind<T> {
       type: type,
       params: params,
       className: className,
-      tag: tag,
       config: config,
     );
   }
@@ -97,7 +92,6 @@ class Bind<T> {
       type: type,
       params: params,
       className: className,
-      tag: tag,
       instance: instance,
       config: config,
     );

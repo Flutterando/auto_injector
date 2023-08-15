@@ -158,19 +158,6 @@ abstract class AutoInjector extends Injector {
   /// This does not remove it from the registry tree.
   T? disposeSingleton<T>();
 
-  /// Removes singleton instances by tag.<br>
-  /// This does not remove it from the registry tree.
-  void disposeSingletonsByTag(
-    String tag, {
-    void Function(dynamic instance)? onRemoved,
-  });
-
-  /// Removes registers by tag.<br>
-  void removeByTag(String tag);
-
-  /// checks if there is any instance registered with a tag
-  bool hasTag(String tag);
-
   /// Replaces an instance record with a concrete instance.<br>
   /// This function should only be used for unit testing.<br>
   /// Any other use is discouraged.
@@ -198,7 +185,7 @@ class AutoInjectorImpl extends AutoInjector {
   @visibleForTesting
   bool commited = false;
 
-  final graph = Graph();
+  final layersGraph = LayersGraph();
 
   @override
   int get bindLength => binds.length;
@@ -321,41 +308,10 @@ class AutoInjectorImpl extends AutoInjector {
   }
 
   @override
-  void disposeSingletonsByTag(
-    String tag, {
-    void Function(dynamic instance)? onRemoved,
-  }) {
-    final taggedBinds = List<Bind>.from(
-      binds.where((bind) => bind.tag == tag),
-    );
-    for (var index = 0; index < taggedBinds.length; index++) {
-      final bind = taggedBinds[index];
-      final instance = _disposeSingletonByClasseName(bind.className);
-      onRemoved?.call(instance);
-    }
-  }
-
-  @override
-  void removeByTag(String tag) {
-    binds.removeWhere((bind) {
-      final isCurrentTag = bind.tag == tag;
-      if (isCurrentTag && bind.instance != null) {
-        bind.config?.onDispose?.call(bind.instance);
-      }
-
-      return isCurrentTag;
-    });
-
-    for (final innerInjector in injectorsList) {
-      innerInjector.removeByTag(tag);
-    }
-  }
-
-  @override
   void replaceInstance<T>(T instance) {
     final className = T.toString();
 
-    final data = graph.getBindByClassName(this, className: className);
+    final data = layersGraph.getBindByClassName(this, className: className);
     if (data == null) {
       throw AutoInjectorException(
         '$className cannot be replaced as it was not added before.',
@@ -370,7 +326,6 @@ class AutoInjectorImpl extends AutoInjector {
     final newBind = Bind<T>(
       constructor: () => instance,
       type: BindType.instance,
-      tag: injector.binds[index].tag,
       instance: instance,
     );
 
@@ -383,8 +338,8 @@ class AutoInjectorImpl extends AutoInjector {
 
     commited = true;
 
-    graph.addInjectorRecursive(this);
-    graph.executeInAllInjectors(this, (injector) {
+    layersGraph.addInjectorRecursive(this);
+    layersGraph.executeInAllInjectors(this, (injector) {
       final isCurrentInjector = injector._tag == _tag;
       if (!isCurrentInjector && !injector.commited) {
         injector.commit();
@@ -402,17 +357,6 @@ class AutoInjectorImpl extends AutoInjector {
 
   @override
   void uncommit() => commited = false;
-
-  @override
-  bool hasTag(String tag) {
-    for (final bind in binds) {
-      if (bind.tag == tag) {
-        return true;
-      }
-    }
-
-    return false;
-  }
 
   void _checkAutoInjectorIsCommited() {
     if (!commited) {
@@ -442,7 +386,7 @@ It is recommended to call the "commit()" method after adding instances.'''
     String className, [
     ParamTransform? transform,
   ]) {
-    final data = graph.getBindByClassName(this, className: className);
+    final data = layersGraph.getBindByClassName(this, className: className);
     if (data == null) return null;
 
     final injectorOwner = data.key;
@@ -574,7 +518,6 @@ Injector commited!\nCannot add new instances, however can still use replace meth
     final bind = Bind<T>(
       constructor: constructor,
       type: type,
-      tag: tag,
       config: config,
       instance: instance,
     );

@@ -17,14 +17,6 @@ void main() {
     expect(injector.isAdded<TestDatasource>(), true);
   });
 
-  test('hasTag', () {
-    const tag = 'tag';
-    injector.uncommit();
-    expect(injector.hasTag(tag), false);
-    injector.add<TestDatasource>(TestDatasource.new, tag: tag);
-    expect(injector.hasTag(tag), true);
-  });
-
   test(
       'AutoInjector: add with dynamic '
       'must return AutoInjector instance', () async {
@@ -267,37 +259,6 @@ TestDatasource not registered.\nTrace: TestController->TestRepository->TestDatas
     });
   });
 
-  group('disposeSingletonsByTag', () {
-    test('2 tagged instances', () {
-      injector.addSingleton(() => 'test', tag: 'tag1');
-      injector.addSingleton(() => true, tag: 'tag1');
-      injector.addSingleton(() => 1);
-      injector.commit();
-
-      expect(injector.isInstantiateSingleton<String>(), true);
-      expect(injector.isInstantiateSingleton<bool>(), true);
-      expect(injector.isInstantiateSingleton<int>(), true);
-
-      expect(injector.isAdded<String>(), true);
-      expect(injector.isAdded<bool>(), true);
-      expect(injector.isAdded<int>(), true);
-
-      final disposed = [];
-
-      injector.disposeSingletonsByTag('tag1', onRemoved: disposed.add);
-
-      expect(disposed, ['test', true]);
-
-      expect(injector.isInstantiateSingleton<String>(), false);
-      expect(injector.isInstantiateSingleton<bool>(), false);
-      expect(injector.isInstantiateSingleton<int>(), true);
-
-      expect(injector.isAdded<String>(), true);
-      expect(injector.isAdded<bool>(), true);
-      expect(injector.isAdded<int>(), true);
-    });
-  });
-
   group('start with on', () {
     test('2 instances', () {
       final injector = AutoInjector(
@@ -407,16 +368,6 @@ TestDatasource not registered.\nTrace: TestController->TestRepository->TestDatas
       ),
       throwsA(isA<AssertionError>()),
     );
-  });
-
-  test('removeByTag', () {
-    injector.addInstance('String', tag: 'tag');
-    injector.addInstance(0);
-    injector.commit();
-
-    expect(injector.bindLength, 2);
-    injector.removeByTag('tag');
-    expect(injector.bindLength, 1);
   });
 
   test('WithNullableParams', () {

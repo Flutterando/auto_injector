@@ -3,11 +3,11 @@
 
 part of 'auto_injector_base.dart';
 
-class Graph {
+class LayersGraph {
   final List<AutoInjectorImpl> modules;
   final Map<AutoInjectorImpl, List<AutoInjectorImpl>> adjacencyList;
 
-  Graph()
+  LayersGraph()
       : modules = [],
         adjacencyList = {};
 
