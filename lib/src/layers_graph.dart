@@ -13,7 +13,7 @@ class LayersGraph {
     for (final innerInjector in injector.injectorsList) {
       _addEdge(injector, innerInjector);
       initialize(innerInjector);
-      removeWhenDispose(
+      _removeWhenDispose(
         innerInjector: innerInjector,
         parentInjector: injector,
       );
@@ -21,7 +21,7 @@ class LayersGraph {
   }
 
   /// Listen the [innerInjector] to remove it from this [LayersGraph].
-  void removeWhenDispose({
+  void _removeWhenDispose({
     required AutoInjectorImpl parentInjector,
     required AutoInjectorImpl innerInjector,
   }) {
