@@ -10,6 +10,8 @@ import 'param.dart';
 
 part 'layers_graph.dart';
 
+typedef VoidCallback = void Function();
+
 /// Register and get binds
 abstract class Injector {
   /// Request an instance by [Type]
@@ -158,8 +160,17 @@ abstract class AutoInjector extends Injector {
   /// Execute "dispose()" in all the injectors from this layers tree
   void disposeRecursive();
 
-  /// Find the injector in the layers tree and execute "dispose()" on it
+  /// Find the injector by [injectorTag] in the layers tree and execute "dispose()" on it
   void disposeInjectorByTag(String injectorTag);
+
+  /// Run the [callback] when method [dispose] is called. <br/>
+  /// All the dispose callbacks are called before the injector is disposed.
+  void addDisposeListener(VoidCallback callback);
+
+  /// Remove the [callback] previous included using [addDisposeListener]. <br/>
+  /// If the callback was NOT included previously using [addDisposeListener]
+  /// it will not do anything.
+  void removeDisposeListener(VoidCallback callback);
 }
 
 class AutoInjectorImpl extends AutoInjector {
@@ -173,6 +184,8 @@ class AutoInjectorImpl extends AutoInjector {
   bool commited = false;
 
   final layersGraph = LayersGraph();
+
+  final disposeListeners = <VoidCallback>[];
 
   @override
   int get bindLength => binds.length;
@@ -302,7 +315,7 @@ class AutoInjectorImpl extends AutoInjector {
 
     commited = true;
 
-    layersGraph.addInjectorRecursive(this);
+    layersGraph.initialize(this);
     layersGraph.executeInAllInjectors(this, (injector) {
       final isCurrentInjector = injector._tag == _tag;
       if (!isCurrentInjector && !injector.commited) {
@@ -334,6 +347,10 @@ It is recommended to call the "commit()" method after adding instances.'''
 
   @override
   void dispose() {
+    for (final disposer in disposeListeners) {
+      disposer.call();
+    }
+    disposeListeners.clear();
     binds.clear();
     layersGraph.reset();
     commited = false;
@@ -353,6 +370,16 @@ It is recommended to call the "commit()" method after adding instances.'''
     layersGraph.executeInAllInjectors(this, (injector) {
       if (injector._tag == injectorTag) injector.dispose();
     });
+  }
+
+  @override
+  void addDisposeListener(VoidCallback callback) {
+    disposeListeners.add(callback);
+  }
+
+  @override
+  void removeDisposeListener(VoidCallback callback) {
+    disposeListeners.remove(callback);
   }
 
   UnregisteredInstance _prepareExceptionTrace(UnregisteredInstance exception) {

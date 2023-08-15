@@ -1,41 +1,59 @@
-// ignore_for_file: public_member_api_docs, library_private_types_in_public_api,
-// ignore_for_file:  omit_local_variable_types, prefer_final_in_for_each, lines_longer_than_80_chars
+// ignore_for_file: public_member_api_docs, omit_local_variable_types
 
 part of 'auto_injector_base.dart';
 
 class LayersGraph {
-  final List<AutoInjectorImpl> modules;
   final Map<AutoInjectorImpl, List<AutoInjectorImpl>> adjacencyList;
 
-  LayersGraph()
-      : modules = [],
-        adjacencyList = {};
+  LayersGraph() : adjacencyList = {};
 
-  void addInjectorRecursive(AutoInjectorImpl injector) {
-    addInjector(injector);
+  /// Fills the [adjacencyList] with this [injector] and its children tree.
+  void initialize(AutoInjectorImpl injector) {
+    _addInjector(injector);
     for (final innerInjector in injector.injectorsList) {
       _addEdge(injector, innerInjector);
-      addInjectorRecursive(innerInjector);
+      initialize(innerInjector);
+      removeWhenDispose(
+        innerInjector: innerInjector,
+        parentInjector: injector,
+      );
     }
   }
 
-  void addInjector(AutoInjectorImpl module) {
-    modules.add(module);
-    adjacencyList[module] = [];
+  /// Listen the [innerInjector] to remove it from this [LayersGraph].
+  void removeWhenDispose({
+    required AutoInjectorImpl parentInjector,
+    required AutoInjectorImpl innerInjector,
+  }) {
+    innerInjector.addDisposeListener(() {
+      // Remove the adjacents of [innerInjector] on [adjacencyList]
+      adjacencyList.remove(innerInjector);
+
+      // Remove [innerInjector] from [parentInjector] on [adjacencyList]
+      adjacencyList[parentInjector]?.remove(innerInjector);
+    });
+  }
+
+  /// Starts the [adjacencyList] for this [injector].<br/><br/>
+  /// **NOTE:** This function doesn't fill the [adjacencyList]. It only creates
+  /// an empty adjacency list to this injector
+  void _addInjector(AutoInjectorImpl injector) {
+    adjacencyList[injector] = [];
   }
 
   void _addEdge(AutoInjectorImpl source, AutoInjectorImpl target) {
     adjacencyList[source]?.add(target);
   }
 
-  /// Returns a MapEntry. The value is the found [Bind] and the key is the [AutoInjectorImpl] that have this bind.
+  /// Returns a MapEntry. The value is the found [Bind] and the key
+  /// is the [AutoInjectorImpl] that have this bind.
   /// <br/><br/> **NOTE: Algorithm based on BFS (breadth-first search)**
   MapEntry<AutoInjectorImpl, Bind>? getBindByClassName(
     AutoInjectorImpl startInjector, {
     required String className,
   }) {
     final injector = getFirstInjectorWhere(startInjector, (currentInjector) {
-      for (Bind bind in currentInjector.binds) {
+      for (final Bind bind in currentInjector.binds) {
         if (bind.className == className) return true;
       }
       return false;
@@ -100,7 +118,6 @@ class LayersGraph {
   }
 
   void reset() {
-    modules.clear();
     adjacencyList.clear();
   }
 }

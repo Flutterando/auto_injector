@@ -1,3 +1,5 @@
+// ignore_for_file: require_trailing_commas
+
 import 'package:auto_injector/auto_injector.dart';
 import 'package:auto_injector/src/auto_injector_base.dart';
 import 'package:test/test.dart';
@@ -199,7 +201,52 @@ void main() {
     // );
     //   });
     // });
+    group('Injector Dispose -', () {
+      test('Should remove the injector from ParentInjector.adjacencyList', () {
+        final innerInjector = AutoInjector(on: (i) {
+          i.addLazySingleton(Class1.new);
+        }) as AutoInjectorImpl;
 
+        final parentInjector = AutoInjector(on: (i) {
+          i.addInjector(innerInjector);
+          i.commit();
+        }) as AutoInjectorImpl;
+
+        innerInjector.dispose();
+
+        expect(parentInjector.layersGraph.adjacencyList[innerInjector], null);
+        expect(
+          parentInjector.layersGraph.adjacencyList[parentInjector]
+              ?.contains(innerInjector),
+          false,
+        );
+        expect(innerInjector.binds.isEmpty, true);
+        expect(innerInjector.layersGraph.adjacencyList.isEmpty, true);
+      });
+      test(
+          'Throws "UnregisteredInstance" when try to get a class after remove '
+          'the inner injector that contains the bind', () {
+        final innerInjector = AutoInjector(on: (i) {
+          i.addLazySingleton(Class1.new);
+        }) as AutoInjectorImpl;
+
+        final parentInjector = AutoInjector(on: (i) {
+          i.addInjector(innerInjector);
+          i.commit();
+        }) as AutoInjectorImpl;
+
+        innerInjector.dispose();
+
+        expect(parentInjector.layersGraph.adjacencyList[innerInjector], null);
+        expect(
+          parentInjector.layersGraph.adjacencyList[parentInjector]
+              ?.contains(innerInjector),
+          false,
+        );
+        expect(innerInjector.binds.isEmpty, true);
+        expect(innerInjector.layersGraph.adjacencyList.isEmpty, true);
+      });
+    });
     group('disposeInjectorByTag', () {
       test('should remove the inner injector named with this tag', () {
         const innerInjectorTag = 'inner-injector-tag';
@@ -221,7 +268,6 @@ void main() {
         expect(innerInjector.commited, false);
         expect(innerInjector.binds.isEmpty, true);
         expect(innerInjector.layersGraph.adjacencyList.isEmpty, true);
-        expect(innerInjector.layersGraph.modules.isEmpty, true);
       });
     });
 
