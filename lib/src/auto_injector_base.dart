@@ -22,32 +22,21 @@ abstract class Injector {
   /// <br>
   /// [transform]: Transform a param. This can be used for example
   /// to replace an instance with a mock in tests.
-  T call<T>({
-    ParamTransform? transform,
-  }) =>
-      get<T>(transform: transform);
+  T call<T>({ParamTransform? transform}) => get<T>(transform: transform);
 
   /// Register a factory instance.
   /// A new instance will be generated whenever requested.
   /// ```dart
   /// injector.add(MyController.new);
   /// ```
-  void add<T>(
-    Function constructor, {
-    String? tag,
-    BindConfig<T>? config,
-  });
+  void add<T>(Function constructor, {BindConfig<T>? config});
 
   /// Register a instance.
   /// A concrete object (Not a function).
   /// ```dart
   /// injector.addInstance(MyController());
   /// ```
-  void addInstance<T>(
-    T instance, {
-    String? tag,
-    BindConfig<T>? config,
-  });
+  void addInstance<T>(T instance, {BindConfig<T>? config});
 
   /// Register a Singleton instance.
   /// It will generate a single instance for the duration of
@@ -56,11 +45,7 @@ abstract class Injector {
   /// ```dart
   /// injector.addSingleton(MyController.new);
   /// ```
-  void addSingleton<T>(
-    Function constructor, {
-    String? tag,
-    BindConfig<T>? config,
-  });
+  void addSingleton<T>(Function constructor, {BindConfig<T>? config});
 
   /// Register a LazySingleton instance.
   /// It will generate a single instance for the duration of
@@ -69,11 +54,7 @@ abstract class Injector {
   /// ```dart
   /// injector.addLazySingleton(MyController.new);
   /// ```
-  void addLazySingleton<T>(
-    Function constructor, {
-    String? tag,
-    BindConfig<T>? config,
-  });
+  void addLazySingleton<T>(Function constructor, {BindConfig<T>? config});
 
   /// Request an notifier propertie by [Type]
   dynamic getNotifier<T>();
@@ -233,27 +214,14 @@ class AutoInjectorImpl extends AutoInjector {
   }
 
   @override
-  void add<T>(
-    Function constructor, {
-    String? tag,
-    BindConfig<T>? config,
-  }) {
-    _add<T>(
-      constructor,
-      tag ?? _tag,
-      config: config,
-    );
+  void add<T>(Function constructor, {BindConfig<T>? config}) {
+    _add<T>(constructor, config: config);
   }
 
   @override
-  void addInstance<T>(
-    T instance, {
-    String? tag,
-    BindConfig<T>? config,
-  }) {
+  void addInstance<T>(T instance, {BindConfig<T>? config}) {
     _add<T>(
       () => instance,
-      tag ?? _tag,
       type: BindType.instance,
       instance: instance,
       config: config,
@@ -261,28 +229,18 @@ class AutoInjectorImpl extends AutoInjector {
   }
 
   @override
-  void addSingleton<T>(
-    Function constructor, {
-    String? tag,
-    BindConfig<T>? config,
-  }) {
+  void addSingleton<T>(Function constructor, {BindConfig<T>? config}) {
     _add<T>(
       constructor,
-      tag ?? _tag,
       type: BindType.singleton,
       config: config,
     );
   }
 
   @override
-  void addLazySingleton<T>(
-    Function constructor, {
-    String? tag,
-    BindConfig<T>? config,
-  }) =>
+  void addLazySingleton<T>(Function constructor, {BindConfig<T>? config}) =>
       _add<T>(
         constructor,
-        tag ?? _tag,
         type: BindType.lazySingleton,
         config: config,
       );
@@ -493,8 +451,7 @@ It is recommended to call the "commit()" method after adding instances.'''
   }
 
   void _add<T>(
-    Function constructor,
-    String tag, {
+    Function constructor, {
     BindType type = BindType.factory,
     T? instance,
     BindConfig<T>? config,
