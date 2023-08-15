@@ -44,7 +44,7 @@ class LayersGraph {
     AutoInjectorImpl startInjector, {
     required String className,
   }) {
-    final injector = getFirstInjector(startInjector, (currentInjector) {
+    final injector = getFirstInjectorWhere(startInjector, (currentInjector) {
       for (Bind bind in currentInjector.binds) {
         if (bind.className == className) return true;
       }
@@ -81,7 +81,7 @@ class LayersGraph {
 
   /// Returns the first injector that pass in the [validation].
   /// <br/><br/> **NOTE: Algorithm based on BFS (breadth-first search)**
-  AutoInjectorImpl? getFirstInjector(
+  AutoInjectorImpl? getFirstInjectorWhere(
     AutoInjectorImpl startInjector,
     bool Function(AutoInjectorImpl) validation,
   ) {
@@ -94,11 +94,12 @@ class LayersGraph {
       if (validation(currentInjector)) {
         return currentInjector;
       }
-
-      for (final adjacentInjector in adjacencyList[currentInjector]!) {
-        if (!visited.contains(adjacentInjector)) {
-          visited.add(adjacentInjector);
-          queue.add(adjacentInjector);
+      if (adjacencyList[currentInjector] != null) {
+        for (final adjacentInjector in adjacencyList[currentInjector]!) {
+          if (!visited.contains(adjacentInjector)) {
+            visited.add(adjacentInjector);
+            queue.add(adjacentInjector);
+          }
         }
       }
     }

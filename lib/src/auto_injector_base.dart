@@ -251,7 +251,7 @@ class AutoInjectorImpl extends AutoInjector {
   }
 
   @override
-  bool isAdded<T>() => _isAddedByClassName(T.toString());
+  bool isAdded<T>() => _hasBindByClassName(T.toString());
 
   @override
   bool isInstantiateSingleton<T>() {
@@ -479,9 +479,15 @@ Injector commited!\nCannot add new instances, however can still use replace meth
       instance: instance,
     );
 
-    if (_isAddedByClassName(bind.className)) {
+    final bindData = layersGraph.getBindByClassName(
+      this,
+      className: bind.className,
+    );
+    final hasBind = bindData != null;
+    if (hasBind) {
+      final injectorOwnsBind = bindData.key;
       throw AutoInjectorException(
-        '${bind.className} Class is already added.',
+        '${bind.className} Class already exists on Injector(tag: "${injectorOwnsBind._tag}").',
         StackTrace.current,
       );
     }
@@ -489,9 +495,9 @@ Injector commited!\nCannot add new instances, however can still use replace meth
     binds.add(bind);
   }
 
-  bool _isAddedByClassName(String className) {
-    final index = binds.indexWhere((bind) => bind.className == className);
-    return index != -1;
+  bool _hasBindByClassName(String className) {
+    final data = layersGraph.getBindByClassName(this, className: className);
+    return data != null;
   }
 
   dynamic _disposeSingletonByClasseName(String className) {
