@@ -159,7 +159,7 @@ void main() {
       expect(injector.get<OtherRepository>(), isA<OtherRepository>());
     });
 
-    test('Error when get not registred instance', () {
+    test('Error when get not registered instance', () {
       try {
         injector.get<TestDatasource>();
         throw Exception('error');
@@ -169,7 +169,7 @@ void main() {
       }
     });
 
-    test('Error when get not registred instance, 2 traces', () {
+    test('Error when get not registered instance, 2 traces', () {
       injector.add(TestController.new);
       injector.add(TestRepository.new);
       injector.commit();
@@ -181,13 +181,13 @@ void main() {
         expect(
           e.message,
           '''
-TestDatasource not registred.\nTrace: TestRepository->TestDatasource'''
+TestDatasource not registered.\nTrace: TestRepository->TestDatasource'''
               .trim(),
         );
       }
     });
 
-    test('Error when get not registred instance, 3 traces', () {
+    test('Error when get not registered instance, 3 traces', () {
       injector.add(TestController.new);
       injector.add(TestRepository.new);
       injector.commit();
@@ -198,7 +198,7 @@ TestDatasource not registred.\nTrace: TestRepository->TestDatasource'''
         expect(
           e.message,
           '''
-TestDatasource not registred.\nTrace: TestController->TestRepository->TestDatasource'''
+TestDatasource not registered.\nTrace: TestController->TestRepository->TestDatasource'''
               .trim(),
         );
       }
@@ -246,7 +246,7 @@ TestDatasource not registred.\nTrace: TestController->TestRepository->TestDataso
     });
   });
   group('addInjector', () {
-    test('add 1 injector withless replace old instances', () {
+    test('add 1 injector without replace old instances', () {
       final injector = AutoInjector();
       final injectorOther = AutoInjector();
 
@@ -426,7 +426,7 @@ TestDatasource not registred.\nTrace: TestController->TestRepository->TestDataso
     expect(injector.get<WithNullableParams>(), isA<WithNullableParams>());
   });
 
-  test('Added same classname binds with tag diff', () {
+  test('Added same class name binds with different tags', () {
     injector.addInstance('String', tag: '1');
     injector.addInstance('String', tag: '2');
 

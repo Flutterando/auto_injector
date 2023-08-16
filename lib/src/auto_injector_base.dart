@@ -70,7 +70,7 @@ abstract class Injector {
     BindConfig<T>? config,
   });
 
-  /// Request an notifier propertie by [Type]
+  /// Request an notifier property by [Type]
   dynamic getNotifier<T>();
 }
 
@@ -181,13 +181,13 @@ abstract class AutoInjector extends Injector {
   /// remove commit
   void uncommit();
 
-  /// Remove all regiters
+  /// Remove all registers
   void removeAll();
 }
 
 class _AutoInjector extends AutoInjector {
   final _binds = <Bind>[];
-  var _commited = false;
+  var _committed = false;
 
   @override
   int get bindLength => _binds.length;
@@ -207,7 +207,7 @@ class _AutoInjector extends AutoInjector {
 
   @override
   T get<T>({ParamTransform? transform}) {
-    _checkAutoInjectorIsCommited();
+    _checkAutoInjectorIsCommitted();
 
     try {
       final className = T.toString();
@@ -386,7 +386,7 @@ class _AutoInjector extends AutoInjector {
 
   @override
   void commit() {
-    _commited = true;
+    _committed = true;
     _binds //
         .where((bind) => bind.type == BindType.singleton)
         .map((bind) => bind.className)
@@ -394,7 +394,7 @@ class _AutoInjector extends AutoInjector {
   }
 
   @override
-  void uncommit() => _commited = false;
+  void uncommit() => _committed = false;
 
   @override
   bool hasTag(String tag) {
@@ -407,8 +407,8 @@ class _AutoInjector extends AutoInjector {
     return false;
   }
 
-  void _checkAutoInjectorIsCommited() {
-    if (!_commited) {
+  void _checkAutoInjectorIsCommitted() {
+    if (!_committed) {
       final message = '''
 The injector(tag: $_tag) is not committed.
 It is recommended to call the "commit()" method after adding instances.'''
@@ -512,7 +512,7 @@ It is recommended to call the "commit()" method after adding instances.'''
       if (!param.isNullable && instance == null) {
         throw UnregisteredInstance(
           [param.className],
-          '${param.className} not registred.',
+          '${param.className} not registered.',
         );
       }
 
@@ -556,10 +556,10 @@ It is recommended to call the "commit()" method after adding instances.'''
       'Added generic value in register. ex\n'
       'injector.add<MyClasse>(MyClasse)',
     );
-    if (_commited) {
+    if (_committed) {
       throw AutoInjectorException(
         '''
-Injector commited!\nCannot add new instances, however can still use replace methods.'''
+Injector committed!\nCannot add new instances, however can still use replace methods.'''
             .trim(),
         StackTrace.current,
       );
