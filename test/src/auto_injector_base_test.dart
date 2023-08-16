@@ -203,6 +203,24 @@ TestDatasource not registered.\nTrace: TestController->TestRepository->TestDatas
         );
       }
     });
+    test('Get instance by tag', () {
+      injector.add<TestWithInterface>(
+        TestWithInterfaceImplementation.new,
+        tag: 'test1',
+      );
+      injector.add<TestWithInterface>(
+        TestWithInterfaceImplementation2.new,
+        tag: 'test2',
+      );
+      injector.commit();
+      final test1 = injector.get<TestWithInterface>(tag: 'test1');
+      final test2 = injector.get<TestWithInterface>(tag: 'test2');
+
+      expect(test1, isA<TestWithInterfaceImplementation>());
+      expect(test2, isA<TestWithInterfaceImplementation2>());
+      expect(test1.talk(), 'TestWithInterfaceImplementation');
+      expect(test2.talk(), 'TestWithInterfaceImplementation2');
+    });
   });
 
   group('replaceInstance', () {
@@ -276,8 +294,8 @@ TestDatasource not registered.\nTrace: TestController->TestRepository->TestDatas
       expect(injector.isInstantiateSingleton<bool>(), true);
       expect(injector.isInstantiateSingleton<int>(), true);
 
-      expect(injector.isAdded<String>(), true);
-      expect(injector.isAdded<bool>(), true);
+      expect(injector.isAdded<String>('tag1'), true);
+      expect(injector.isAdded<bool>('tag1'), true);
       expect(injector.isAdded<int>(), true);
 
       final disposed = [];
@@ -290,8 +308,8 @@ TestDatasource not registered.\nTrace: TestController->TestRepository->TestDatas
       expect(injector.isInstantiateSingleton<bool>(), false);
       expect(injector.isInstantiateSingleton<int>(), true);
 
-      expect(injector.isAdded<String>(), true);
-      expect(injector.isAdded<bool>(), true);
+      expect(injector.isAdded<String>('tag1'), true);
+      expect(injector.isAdded<bool>('tag1'), true);
       expect(injector.isAdded<int>(), true);
     });
   });
@@ -467,4 +485,22 @@ class OtherRepository {
   final TestDatasource datasource;
 
   OtherRepository(this.name, {required this.datasource});
+}
+
+abstract class TestWithInterface {
+  String talk();
+}
+
+class TestWithInterfaceImplementation implements TestWithInterface {
+  @override
+  String talk() {
+    return 'TestWithInterfaceImplementation';
+  }
+}
+
+class TestWithInterfaceImplementation2 implements TestWithInterface {
+  @override
+  String talk() {
+    return 'TestWithInterfaceImplementation2';
+  }
 }

@@ -11,7 +11,10 @@ abstract class Injector {
   /// <br>
   /// [transform]: Transform a param. This can be used for example
   /// to replace an instance with a mock in tests.
-  T get<T>({ParamTransform? transform});
+  T get<T>({
+    ParamTransform? transform,
+    String? tag,
+  });
 
   /// Request an instance by [Type]
   /// <br>
@@ -206,15 +209,19 @@ class _AutoInjector extends AutoInjector {
   }
 
   @override
-  T get<T>({ParamTransform? transform}) {
+  T get<T>({ParamTransform? transform, String? tag}) {
     _checkAutoInjectorIsCommitted();
 
     try {
       final className = T.toString();
-      final instance = _resolveInstanceByClassName(className, transform);
+      final instance = _resolveInstanceByClassName(className, transform, tag);
 
       if (instance == null) {
-        throw UnregisteredInstance([className], '$className unregistered.');
+        throw UnregisteredInstance(
+          [className],
+          '$className unregistered'
+          '${tag?.isNotEmpty ?? false ? ' [Tag: $tag]' : ''}.',
+        );
       }
 
       return instance;
@@ -313,6 +320,7 @@ class _AutoInjector extends AutoInjector {
       T.toString(),
       tag,
     );
+    final d = searchBind.compare;
     return _binds.any(searchBind.compare);
   }
 
@@ -389,8 +397,7 @@ class _AutoInjector extends AutoInjector {
     _committed = true;
     _binds //
         .where((bind) => bind.type == BindType.singleton)
-        .map((bind) => bind.className)
-        .forEach(_resolveInstanceByClassName);
+        .forEach((e) => _resolveInstanceByClassName(e.className, null, e.tag));
   }
 
   @override
@@ -434,8 +441,9 @@ It is recommended to call the "commit()" method after adding instances.'''
   dynamic _resolveInstanceByClassName(
     String className, [
     ParamTransform? transform,
+    String? tag,
   ]) {
-    var bind = _getBindByClassName(className);
+    var bind = _getBindByClassName(className, tag: tag);
 
     if (bind == null) {
       return null;
@@ -445,7 +453,7 @@ It is recommended to call the "commit()" method after adding instances.'''
       return bind.instance;
     }
 
-    bind = _resolveBind(bind, transform);
+    bind = _resolveBind(bind, transform, tag: tag);
 
     if (bind.type.isSingleton) {
       _updateBinds(bind);
@@ -454,11 +462,13 @@ It is recommended to call the "commit()" method after adding instances.'''
     return bind.instance;
   }
 
-  Bind? _getBindByClassName(String className) {
+  Bind? _getBindByClassName(String className, {String? tag}) {
     final bind = _binds
         .cast<Bind?>() //
         .firstWhere(
-          (bind) => bind?.className == className,
+          (bind) =>
+              bind?.className == className &&
+              ((tag?.isEmpty ?? true) || bind?.tag == tag),
           orElse: () => null,
         );
 
@@ -467,12 +477,13 @@ It is recommended to call the "commit()" method after adding instances.'''
 
   Bind _resolveBind(
     Bind bind,
-    ParamTransform? transform,
-  ) {
+    ParamTransform? transform, {
+    String? tag,
+  }) {
     late List<Param> params;
 
     try {
-      params = _resolveParam(bind.params, transform);
+      params = _resolveParam(bind.params, transform, tag: tag);
     } on UnregisteredInstance catch (e) {
       final classNames = [bind.className, ...e.classNames];
       throw UnregisteredInstance(classNames, e.message);
@@ -498,8 +509,9 @@ It is recommended to call the "commit()" method after adding instances.'''
 
   List<Param> _resolveParam(
     List<Param> params,
-    ParamTransform? transform,
-  ) {
+    ParamTransform? transform, {
+    String? tag,
+  }) {
     final copyParams = params.where((param) => param.injectableParam).toList();
     for (var i = 0; i < copyParams.length; i++) {
       final param = _transforms(copyParams[i], transform);
@@ -508,7 +520,8 @@ It is recommended to call the "commit()" method after adding instances.'''
         continue;
       }
 
-      final instance = _resolveInstanceByClassName(param.className, transform);
+      final instance =
+          _resolveInstanceByClassName(param.className, transform, tag);
       if (!param.isNullable && instance == null) {
         throw UnregisteredInstance(
           [param.className],
@@ -588,8 +601,12 @@ Injector committed!\nCannot add new instances, however can still use replace met
     return index != -1;
   }
 
-  dynamic _disposeSingletonByClasseName(String className) {
-    final index = _binds.indexWhere((bind) => bind.className == className);
+  dynamic _disposeSingletonByClasseName(String className, {String? tag}) {
+    final index = _binds.indexWhere(
+      (bind) =>
+          bind.className == className &&
+          ((tag?.isEmpty ?? true) || bind.tag == tag),
+    );
     if (index != -1) {
       final bind = _binds[index];
       final instance = bind.instance;

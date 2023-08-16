@@ -404,7 +404,7 @@ And the link for the currently used option in this readme: https://contrib.rocks
 
 <br>
 <p align="center">
-  <a href="https://www.flutterando.com.br">
+  <a href="https://www.flutterando.com.br">git c
     <img width="110px" src="https://raw.githubusercontent.com/Flutterando/README-Template/master/readme_assets/logo-flutterando.png">
   </a>
   <p align="center">
