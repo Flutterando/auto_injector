@@ -152,7 +152,7 @@ abstract class AutoInjector extends Injector {
   bool isAdded<T>([String? tag]);
 
   /// checks if the instance registration is as singleton.
-  bool isInstantiateSingleton<T>();
+  bool isInstantiateSingleton<T>({String? tag});
 
   /// Removes the singleton instance.<br>
   /// This does not remove it from the registry tree.
@@ -324,9 +324,9 @@ class _AutoInjector extends AutoInjector {
   }
 
   @override
-  bool isInstantiateSingleton<T>() {
+  bool isInstantiateSingleton<T>({String? tag}) {
     final className = T.toString();
-    final bind = _getBindByClassName(className);
+    final bind = _getBindByClassName(className, tag: tag);
     return bind?.hasInstance ?? false;
   }
 
@@ -462,12 +462,11 @@ It is recommended to call the "commit()" method after adding instances.'''
   }
 
   Bind? _getBindByClassName(String className, {String? tag}) {
+    tag ??= _tag;
     final bind = _binds
         .cast<Bind?>() //
         .firstWhere(
-          (bind) =>
-              bind?.className == className &&
-              ((tag?.isEmpty ?? true) || bind?.tag == tag),
+          (bind) => bind?.className == className && (bind?.tag == (tag ?? '')),
           orElse: () => null,
         );
 

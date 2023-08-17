@@ -204,6 +204,8 @@ TestDatasource not registered.\nTrace: TestController->TestRepository->TestDatas
       }
     });
     test('Get instance by tag', () {
+      injector
+          .add<TestWithInterface>(TestWithInterfaceDefaultImplementation.new);
       injector.add<TestWithInterface>(
         TestWithInterfaceImplementation.new,
         tag: 'test1',
@@ -213,11 +215,14 @@ TestDatasource not registered.\nTrace: TestController->TestRepository->TestDatas
         tag: 'test2',
       );
       injector.commit();
+      final defaultValue = injector.get<TestWithInterface>();
       final test1 = injector.get<TestWithInterface>(tag: 'test1');
       final test2 = injector.get<TestWithInterface>(tag: 'test2');
 
+      expect(defaultValue, isA<TestWithInterfaceDefaultImplementation>());
       expect(test1, isA<TestWithInterfaceImplementation>());
       expect(test2, isA<TestWithInterfaceImplementation2>());
+      expect(defaultValue.talk(), 'TestWithInterfaceDefaultImplementation');
       expect(test1.talk(), 'TestWithInterfaceImplementation');
       expect(test2.talk(), 'TestWithInterfaceImplementation2');
     });
@@ -290,8 +295,8 @@ TestDatasource not registered.\nTrace: TestController->TestRepository->TestDatas
       injector.addSingleton(() => 1);
       injector.commit();
 
-      expect(injector.isInstantiateSingleton<String>(), true);
-      expect(injector.isInstantiateSingleton<bool>(), true);
+      expect(injector.isInstantiateSingleton<String>(tag: 'tag1'), true);
+      expect(injector.isInstantiateSingleton<bool>(tag: 'tag1'), true);
       expect(injector.isInstantiateSingleton<int>(), true);
 
       expect(injector.isAdded<String>('tag1'), true);
@@ -304,8 +309,8 @@ TestDatasource not registered.\nTrace: TestController->TestRepository->TestDatas
 
       expect(disposed, ['test', true]);
 
-      expect(injector.isInstantiateSingleton<String>(), false);
-      expect(injector.isInstantiateSingleton<bool>(), false);
+      expect(injector.isInstantiateSingleton<String>(tag: 'tag1'), false);
+      expect(injector.isInstantiateSingleton<bool>(tag: 'tag1'), false);
       expect(injector.isInstantiateSingleton<int>(), true);
 
       expect(injector.isAdded<String>('tag1'), true);
@@ -489,6 +494,13 @@ class OtherRepository {
 
 abstract class TestWithInterface {
   String talk();
+}
+
+class TestWithInterfaceDefaultImplementation implements TestWithInterface {
+  @override
+  String talk() {
+    return 'TestWithInterfaceDefaultImplementation';
+  }
 }
 
 class TestWithInterfaceImplementation implements TestWithInterface {
