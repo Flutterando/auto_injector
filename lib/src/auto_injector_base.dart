@@ -320,7 +320,6 @@ class _AutoInjector extends AutoInjector {
       T.toString(),
       tag,
     );
-    final d = searchBind.compare;
     return _binds.any(searchBind.compare);
   }
 
