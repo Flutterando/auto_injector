@@ -1,4 +1,4 @@
-/// AutoInjecton Exception with ToString auto configurated
+/// AutoInjection Exception with ToString auto configured
 /// <br>
 /// [message]: message of exception<br>
 /// [stackTrace]: traces of exception
@@ -9,7 +9,7 @@ class AutoInjectorException implements Exception {
   /// traces of exception
   final StackTrace? stackTrace;
 
-  /// AutoInjecton Exception with ToString auto configurated
+  /// AutoInjection Exception with ToString auto configured
   AutoInjectorException(this.message, [this.stackTrace]);
 
   // ignore: no_runtimetype_tostring
@@ -26,7 +26,7 @@ class AutoInjectorException implements Exception {
   }
 }
 
-/// AutoInjecton Exception for Unregistered instance.
+/// AutoInjection Exception for Unregistered instance.
 /// <br>
 /// Store all parent classNames
 /// [message]: message of exception<br>
@@ -36,7 +36,7 @@ class UnregisteredInstance extends AutoInjectorException {
   /// all parent class names;
   final List<String> classNames;
 
-  /// AutoInjecton Exception for Unregistered instance.
+  /// AutoInjection Exception for Unregistered instance.
   /// <br>
   /// Store all parent classNames
   /// [message]: message of exception<br>

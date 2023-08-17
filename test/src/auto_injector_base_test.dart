@@ -240,7 +240,7 @@ TestDatasource not registered.\nTrace: TestController->TestRepository->TestDatas
     });
   });
   group('addInjector', () {
-    test('add 1 injector withless replace old instances', () {
+    test('add 1 injector without replace old instances', () {
       final injector = AutoInjector();
       final injectorOther = AutoInjector();
 

@@ -265,7 +265,7 @@ void main() {
         );
 
         parentInjector.disposeInjectorByTag(innerInjectorTag);
-        expect(innerInjector.commited, false);
+        expect(innerInjector.committed, false);
         expect(innerInjector.binds.isEmpty, true);
         expect(innerInjector.layersGraph.adjacencyList.isEmpty, true);
       });
@@ -278,7 +278,7 @@ void main() {
         parentInjector.addInjector(innerInjector);
         parentInjector.commit();
 
-        expect(innerInjector.commited, true);
+        expect(innerInjector.committed, true);
       });
 
       test(
@@ -304,7 +304,7 @@ void main() {
         parentInjector.addInjector(innerInjector);
         parentInjector.commit();
 
-        expect(innerInjector.commited, true);
+        expect(innerInjector.committed, true);
       });
     });
 
