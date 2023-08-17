@@ -463,11 +463,17 @@ It is recommended to call the "commit()" method after adding instances.'''
 
   Bind? _getBindByClassName(String className, {String? tag}) {
     tag ??= _tag;
+    final bindByClassName = _binds
+        .cast<Bind?>() //
+        .firstWhere(
+          (bind) => bind?.className == className,
+          orElse: () => null,
+        );
     final bind = _binds
         .cast<Bind?>() //
         .firstWhere(
           (bind) => bind?.className == className && (bind?.tag == (tag ?? '')),
-          orElse: () => null,
+          orElse: () => bindByClassName,
         );
 
     return bind;
