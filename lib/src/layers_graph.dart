@@ -3,10 +3,10 @@
 part of 'auto_injector_base.dart';
 
 class LayersGraph {
-  final HashMap<AutoInjectorImpl, List<AutoInjectorImpl>> adjacencyList;
+  final LinkedHashMap<AutoInjectorImpl, List<AutoInjectorImpl>> adjacencyList;
 
   LayersGraph()
-      : adjacencyList = HashMap(
+      : adjacencyList = LinkedHashMap(
           equals: (injector1, injector2) => injector1._tag == injector2._tag,
           hashCode: (injector) => injector._tag.hashCode,
           isValidKey: (key) => key is AutoInjectorImpl && key._tag.isNotEmpty,
