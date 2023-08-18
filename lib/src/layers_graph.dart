@@ -3,9 +3,14 @@
 part of 'auto_injector_base.dart';
 
 class LayersGraph {
-  final Map<AutoInjectorImpl, List<AutoInjectorImpl>> adjacencyList;
+  final HashMap<AutoInjectorImpl, List<AutoInjectorImpl>> adjacencyList;
 
-  LayersGraph() : adjacencyList = {};
+  LayersGraph()
+      : adjacencyList = HashMap(
+          equals: (injector1, injector2) => injector1._tag == injector2._tag,
+          hashCode: (injector) => injector._tag.hashCode,
+          isValidKey: (key) => key is AutoInjectorImpl && key._tag.isNotEmpty,
+        );
 
   /// Fills the [adjacencyList] with this [injector] and its children tree.
   void initialize(AutoInjectorImpl injector) {
