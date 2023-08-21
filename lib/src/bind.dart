@@ -30,7 +30,6 @@ class Bind<T> {
   final BindType type;
   final List<Param> params;
   final String className;
-  final String tag;
   final T? instance;
   final BindConfig<T>? config;
 
@@ -39,7 +38,6 @@ class Bind<T> {
   factory Bind({
     required Function constructor,
     required BindType type,
-    required String tag,
     BindConfig<T>? config,
     T? instance,
   }) {
@@ -50,19 +48,17 @@ class Bind<T> {
       constructor: constructor,
       className: className,
       params: params,
-      tag: tag,
       type: type,
       config: config,
       instance: instance,
     );
   }
 
-  factory Bind.empty(String className, String tag) {
+  factory Bind.empty(String className) {
     return Bind<T>._(
       constructor: () => null,
       className: className,
       params: [],
-      tag: tag,
       type: BindType.factory,
     );
   }
@@ -85,29 +81,26 @@ class Bind<T> {
     required this.type,
     required this.params,
     required this.className,
-    required this.tag,
     this.config,
     this.instance,
   });
 
-  Bind<T> removeInstance() {
+  Bind<T> withoutInstance() {
     return Bind<T>._(
       constructor: constructor,
       type: type,
       params: params,
       className: className,
-      tag: tag,
       config: config,
     );
   }
 
-  Bind<T> addInstance(T instance) {
+  Bind<T> withInstance(T instance) {
     return Bind<T>._(
       constructor: constructor,
       type: type,
       params: params,
       className: className,
-      tag: tag,
       instance: instance,
       config: config,
     );
@@ -177,9 +170,5 @@ class Bind<T> {
 
     final className = constructorString.split(' => ').last;
     return className;
-  }
-
-  bool compare(Bind bind) {
-    return className == bind.className && tag == bind.tag;
   }
 }

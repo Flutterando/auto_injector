@@ -10,9 +10,10 @@ class AutoInjectorException implements Exception {
   final StackTrace? stackTrace;
 
   /// AutoInjection Exception with ToString auto configured
-  const AutoInjectorException(this.message, [this.stackTrace]);
+  AutoInjectorException(this.message, [this.stackTrace]);
 
-  String get _typeName => 'AutoInjectorException';
+  // ignore: no_runtimetype_tostring
+  late final String _typeName = '$runtimeType';
 
   @override
   String toString() {
@@ -44,11 +45,42 @@ class UnregisteredInstance extends AutoInjectorException {
   UnregisteredInstance(this.classNames, [super.message = '', super.stackTrace]);
 
   @override
-  String get _typeName => 'UnregisteredInstance';
+  String toString() {
+    var message = '$_typeName: ${this.message}\n${classNames.join(' => ')}';
+    if (stackTrace != null) {
+      message = '$message\n$stackTrace';
+    }
+
+    return message;
+  }
+}
+
+/// AutoInjecton Exception for Unregistered instance.
+/// <br>
+/// Store all parent classNames
+/// [message]: message of exception<br>
+/// [stackTrace]: traces of exception
+/// [classNames]: all parent class names
+class InjectorAlreadyCommited extends AutoInjectorException {
+  /// all parent class names;
+  final String injectorTag;
+
+  /// AutoInjecton Exception for Unregistered instance.
+  /// <br>
+  /// Store all parent classNames
+  /// [message]: message of exception<br>
+  /// [stackTrace]: traces of exception
+  /// [classNames]: all parent class names
+  InjectorAlreadyCommited(
+    this.injectorTag, [
+    super.message = '',
+    super.stackTrace,
+  ]);
 
   @override
   String toString() {
-    var message = '$_typeName: ${this.message}\n${classNames.join(' => ')}';
+    var message =
+        '$_typeName: ${this.message}\nAutoInjector(tag: $injectorTag)';
     if (stackTrace != null) {
       message = '$message\n$stackTrace';
     }

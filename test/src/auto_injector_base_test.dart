@@ -6,7 +6,7 @@ void main() {
 
   setUp(() {
     injector = AutoInjector();
-    injector.removeAll();
+    injector.disposeRecursive();
   });
 
   test('AutoInjector: add', () async {
@@ -15,14 +15,6 @@ void main() {
     injector.commit();
 
     expect(injector.isAdded<TestDatasource>(), true);
-  });
-
-  test('hasTag', () {
-    const tag = 'tag';
-    injector.uncommit();
-    expect(injector.hasTag(tag), false);
-    injector.add<TestDatasource>(TestDatasource.new, tag: tag);
-    expect(injector.hasTag(tag), true);
   });
 
   test(
@@ -161,6 +153,7 @@ void main() {
 
     test('Error when get not registered instance', () {
       try {
+        injector.commit();
         injector.get<TestDatasource>();
         throw Exception('error');
       } on UnregisteredInstance catch (e) {
@@ -217,6 +210,7 @@ TestDatasource not registered.\nTrace: TestController->TestRepository->TestDatas
     });
 
     test('Throw AutoInjectorException when have no added before', () {
+      injector.commit();
       expect(
         () => injector.replaceInstance<String>('Changed'),
         throwsA(isA<AutoInjectorException>()),
@@ -262,37 +256,6 @@ TestDatasource not registered.\nTrace: TestController->TestRepository->TestDatas
       expect(injector.get<String>(), 'Text');
       expect(injector.get<int>(), 1);
       expect(injector.get<TestDatasource>(), isA<TestDatasource>());
-    });
-  });
-
-  group('disposeSingletonsByTag', () {
-    test('2 tagged instances', () {
-      injector.addSingleton(() => 'test', tag: 'tag1');
-      injector.addSingleton(() => true, tag: 'tag1');
-      injector.addSingleton(() => 1);
-      injector.commit();
-
-      expect(injector.isInstantiateSingleton<String>(), true);
-      expect(injector.isInstantiateSingleton<bool>(), true);
-      expect(injector.isInstantiateSingleton<int>(), true);
-
-      expect(injector.isAdded<String>(), true);
-      expect(injector.isAdded<bool>(), true);
-      expect(injector.isAdded<int>(), true);
-
-      final disposed = [];
-
-      injector.disposeSingletonsByTag('tag1', onRemoved: disposed.add);
-
-      expect(disposed, ['test', true]);
-
-      expect(injector.isInstantiateSingleton<String>(), false);
-      expect(injector.isInstantiateSingleton<bool>(), false);
-      expect(injector.isInstantiateSingleton<int>(), true);
-
-      expect(injector.isAdded<String>(), true);
-      expect(injector.isAdded<bool>(), true);
-      expect(injector.isAdded<int>(), true);
     });
   });
 
@@ -407,16 +370,6 @@ TestDatasource not registered.\nTrace: TestController->TestRepository->TestDatas
     );
   });
 
-  test('removeByTag', () {
-    injector.addInstance('String', tag: 'tag');
-    injector.addInstance(0);
-    injector.commit();
-
-    expect(injector.bindLength, 2);
-    injector.removeByTag('tag');
-    expect(injector.bindLength, 1);
-  });
-
   test('WithNullableParams', () {
     injector.addInstance('String');
     injector.addSingleton(WithNullableParams.new);
@@ -424,13 +377,6 @@ TestDatasource not registered.\nTrace: TestController->TestRepository->TestDatas
 
     expect(injector.bindLength, 2);
     expect(injector.get<WithNullableParams>(), isA<WithNullableParams>());
-  });
-
-  test('Added same class name binds with different tags', () {
-    injector.addInstance('String', tag: '1');
-    injector.addInstance('String', tag: '2');
-
-    expect(injector.bindLength, 2);
   });
 }
 
