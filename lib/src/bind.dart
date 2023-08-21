@@ -132,8 +132,15 @@ class Bind<T> {
     if (namedParams != null) {
       final named = namedParams.group(1)!;
       allArgs = allArgs.replaceAll('{$named}', '');
+      final pattern = RegExp(r'(?:(required)\s+)?(\b\w+(?:<[^>]+>)?\??)\s*(\w+)');
+      final matches = pattern.allMatches(named);
 
-      final paramsText = named.split(',').map((e) => e.trim()).toList();
+      final paramsText = matches.map((match) {
+        final isRequired = match.group(1) != null;
+        final dataType = match.group(2);
+        final variableName = match.group(3);
+        return '${isRequired ? 'required ' : ''}$dataType $variableName';
+      }).toList();
 
       for (final paramText in paramsText) {
         final anatomicParamText = paramText.split(' ');
