@@ -1,6 +1,8 @@
 // ignore_for_file: public_member_api_docs
 
 import 'package:auto_injector/auto_injector.dart';
+import 'package:fake_reflection/fake_reflection.dart'
+    show FakeReflectionExtension;
 
 enum BindType {
   instance,
@@ -42,8 +44,48 @@ class Bind<T> {
     T? instance,
   }) {
     final constructorString = constructor.runtimeType.toString();
-    final className = _resolveClassName<T>(constructorString);
-    final params = _extractParams(constructorString);
+    final constructorListString = constructorString.split(' ');
+    final paramsString = constructorListString[0];
+    final classNameString = constructorListString.last;
+    if (paramsString == '()') {
+      return Bind<T>._(
+        constructor: constructor,
+        className: classNameString,
+        params: [],
+        type: type,
+        config: config,
+        instance: instance,
+      );
+    }
+
+    final classData = constructor.reflection();
+    final className = classData.className;
+
+    final params = [
+      ...classData.namedParams.map(
+        (param) => NamedParam(
+          className: param.type,
+          isNullable: param.nullable,
+          isRequired: param.required,
+          named: Symbol(param.name),
+        ),
+      ),
+      ...classData.notRequiredPositionalParams.map(
+        (param) => PositionalParam(
+          className: param.type,
+          isNullable: param.nullable,
+          isRequired: false,
+        ),
+      ),
+      ...classData.positionalParams.map(
+        (param) => PositionalParam(
+          className: param.type,
+          isNullable: param.nullable,
+          isRequired: true,
+        ),
+      ),
+    ];
+
     return Bind<T>._(
       constructor: constructor,
       className: className,
@@ -104,98 +146,5 @@ class Bind<T> {
       instance: instance,
       config: config,
     );
-  }
-
-  static List<String> _customSplit(String input) {
-    final parts = <String>[];
-    var currentPart = '';
-    var angleBracketCount = 0;
-
-    for (final char in input.runes) {
-      final charStr = String.fromCharCode(char);
-
-      if (charStr == ',' && angleBracketCount == 0) {
-        parts.add(currentPart.trim());
-        currentPart = '';
-      } else {
-        currentPart += charStr;
-
-        if (charStr == '<') {
-          angleBracketCount++;
-        } else if (charStr == '>') {
-          angleBracketCount--;
-        }
-      }
-    }
-
-    if (currentPart.isNotEmpty && currentPart != ' ') {
-      parts.add(currentPart.trim());
-    }
-
-    return parts;
-  }
-
-  static List<Param> _extractParams(String constructorString) {
-    final params = <Param>[];
-
-    if (constructorString.startsWith('() => ')) {
-      return params;
-    }
-
-    final allArgsRegex = RegExp(r'\((.+)\) => .+');
-
-    final allArgsMatch = allArgsRegex.firstMatch(constructorString);
-
-    var allArgs = allArgsMatch!.group(1)!;
-
-    final hasNamedParams = RegExp(r'\{(.+)\}');
-    final namedParams = hasNamedParams.firstMatch(allArgs);
-
-    if (namedParams != null) {
-      final named = namedParams.group(1)!;
-      allArgs = allArgs.replaceAll('{$named}', '');
-
-      final paramsText = _customSplit(named);
-
-      for (final paramText in paramsText) {
-        final anatomicParamText = paramText.split(' ');
-
-        final type = anatomicParamText[anatomicParamText.length - 2];
-        final named = Symbol(anatomicParamText.last);
-
-        final param = NamedParam(
-          isRequired: anatomicParamText.contains('required'),
-          named: named,
-          isNullable: type.endsWith('?'),
-          className: type.replaceFirst('?', ''),
-        );
-
-        params.add(param);
-      }
-    }
-
-    if (allArgs.isNotEmpty) {
-      final paramList = _customSplit(allArgs);
-      final allParam =
-          paramList.map((e) => e.trim()).where((e) => e.isNotEmpty).map((e) {
-        return PositionalParam(
-          className: e.replaceFirst('?', ''),
-          isNullable: e.endsWith('?'),
-        );
-      }).toList();
-
-      params.addAll(allParam);
-    }
-
-    return params;
-  }
-
-  static String _resolveClassName<T>(String constructorString) {
-    final typeName = T.toString();
-    final isDynamicOrObjectType = ['dynamic', 'Object'].contains(typeName);
-    if (!isDynamicOrObjectType) return typeName;
-
-    final className = constructorString.split(' => ').last;
-    return className;
   }
 }
