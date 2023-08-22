@@ -106,6 +106,35 @@ class Bind<T> {
     );
   }
 
+  static List<String> _customSplit(String input) {
+    final parts = <String>[];
+    var currentPart = '';
+    var angleBracketCount = 0;
+
+    for (final char in input.runes) {
+      final charStr = String.fromCharCode(char);
+
+      if (charStr == ',' && angleBracketCount == 0) {
+        parts.add(currentPart.trim());
+        currentPart = '';
+      } else {
+        currentPart += charStr;
+
+        if (charStr == '<') {
+          angleBracketCount++;
+        } else if (charStr == '>') {
+          angleBracketCount--;
+        }
+      }
+    }
+
+    if (currentPart.isNotEmpty && currentPart != ' ') {
+      parts.add(currentPart.trim());
+    }
+
+    return parts;
+  }
+
   static List<Param> _extractParams(String constructorString) {
     final params = <Param>[];
 
@@ -126,7 +155,7 @@ class Bind<T> {
       final named = namedParams.group(1)!;
       allArgs = allArgs.replaceAll('{$named}', '');
 
-      final paramsText = named.split(',').map((e) => e.trim()).toList();
+      final paramsText = _customSplit(named);
 
       for (final paramText in paramsText) {
         final anatomicParamText = paramText.split(' ');
@@ -146,11 +175,9 @@ class Bind<T> {
     }
 
     if (allArgs.isNotEmpty) {
-      final allParam = allArgs //
-          .split(',')
-          .map((e) => e.trim())
-          .where((e) => e.isNotEmpty)
-          .map((e) {
+      final paramList = _customSplit(allArgs);
+      final allParam =
+          paramList.map((e) => e.trim()).where((e) => e.isNotEmpty).map((e) {
         return PositionalParam(
           className: e.replaceFirst('?', ''),
           isNullable: e.endsWith('?'),
