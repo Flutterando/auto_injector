@@ -123,6 +123,13 @@ void main() {
       expect(injector.get<TestRepository>(), isA<TestRepository>());
     });
 
+    test('Get instance with named params with Map generics', () {
+      injector.add(TestComplexNamed.new);
+      injector.commit();
+
+      expect(injector.get<TestComplexNamed>(), isA<TestComplexNamed>());
+    });
+
     test('Get instance with named params', () {
       injector.add(TestRepository.new);
       injector.add(TestDatasource.new);
@@ -404,6 +411,14 @@ class TestRepository {
 
   TestRepository({required this.datasource, this.text});
 }
+
+class TestComplexNamed {
+  final Map<String, dynamic>? value;
+  final Map<String, List<Map<String, dynamic>>>? map;
+
+  TestComplexNamed({this.value, this.map});
+}
+
 
 class TestDatasource {}
 
