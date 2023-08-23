@@ -53,7 +53,7 @@ class Bind<T> {
     if (paramsString == '()') {
       return Bind<T>._(
         constructor: constructor,
-        className: (key != null) ? null : classNameString,
+        className: key ?? classNameString,
         params: [],
         type: type,
         config: config,
