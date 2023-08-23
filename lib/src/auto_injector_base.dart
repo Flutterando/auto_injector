@@ -19,7 +19,7 @@ abstract class Injector {
   /// [transform] : Transform a param. This can be used for example
   /// to replace an instance with a mock in tests.
   /// <br>
-  /// When [key] is provided it will search the instance by key.
+  /// When [key] is provided it will search the instance that have the same key
   T get<T>({ParamTransform? transform, String? key});
 
   /// Request an instance by [Type]
@@ -27,7 +27,7 @@ abstract class Injector {
   /// [transform]: Transform a param. This can be used for example
   /// to replace an instance with a mock in tests.
   /// <br>
-  /// When [key] is provided it will search the instance by key.
+  /// When [key] is provided it will search the instance that have the same key
   T call<T>({ParamTransform? transform, String? key}) {
     return get<T>(transform: transform, key: key);
   }
@@ -38,7 +38,7 @@ abstract class Injector {
   /// injector.add(MyController.new);
   /// ```
   /// <br>
-  /// When [key] is provided it can be searched by key
+  /// When [key] is provided this instance only can be found by key
   void add<T>(Function constructor, {BindConfig<T>? config, String? key});
 
   /// Register a instance.
@@ -46,6 +46,8 @@ abstract class Injector {
   /// ```dart
   /// injector.addInstance(MyController());
   /// ```
+  /// <br>
+  /// When [key] is provided this instance only can be found by key
   void addInstance<T>(T instance, {BindConfig<T>? config, String? key});
 
   /// Register a Singleton instance.
@@ -55,6 +57,8 @@ abstract class Injector {
   /// ```dart
   /// injector.addSingleton(MyController.new);
   /// ```
+  /// <br>
+  /// When [key] is provided this instance only can be found by key
   void addSingleton<T>(
     Function constructor, {
     BindConfig<T>? config,
@@ -68,6 +72,8 @@ abstract class Injector {
   /// ```dart
   /// injector.addLazySingleton(MyController.new);
   /// ```
+  /// <br>
+  /// When [key] is provided this instance only can be found by key
   void addLazySingleton<T>(
     Function constructor, {
     BindConfig<T>? config,
@@ -75,6 +81,8 @@ abstract class Injector {
   });
 
   /// Request an notifier property by [Type]
+  /// <br>
+  /// When [key] is provided it will search the instance that have the same key
   dynamic getNotifier<T>({String? key});
 }
 
@@ -136,6 +144,8 @@ abstract class AutoInjector extends Injector {
   /// <br>
   /// [transform]: Transform a param. This can be used for example
   /// to replace an instance with a mock in tests.
+  /// <br>
+  /// When [key] is provided it will search the instance that have the same key
   T? tryGet<T>({ParamTransform? transform, String? key});
 
   /// Inherit all instances and transforms from other AutoInjector object.
@@ -148,18 +158,26 @@ abstract class AutoInjector extends Injector {
   void addInjector(AutoInjector injector);
 
   /// Checks if the instance record exists.
+  /// <br>
+  /// When [key] is provided it will search the instance that have the same key
   bool isAdded<T>({String? key});
 
   /// checks if the instance registration is as singleton.
+  /// <br>
+  /// When [key] is provided it will search the instance that have the same key
   bool isInstantiateSingleton<T>({String? key});
 
   /// Removes the singleton instance.<br>
   /// This does not remove it from the registry tree.
+  /// <br>
+  /// When [key] is provided it will search the instance that have the same key
   T? disposeSingleton<T>({String? key});
 
   /// Replaces an instance record with a concrete instance.<br>
   /// This function should only be used for unit testing.<br>
   /// Any other use is discouraged.
+  /// <br>
+  /// When [key] is provided it will search the instance that have the same key
   void replaceInstance<T>(T instance, {String? key});
 
   /// Informs the container that the additions
