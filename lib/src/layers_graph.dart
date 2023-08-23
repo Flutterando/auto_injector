@@ -69,6 +69,24 @@ class LayersGraph {
     return MapEntry(injector, bind);
   }
 
+  /// Returns a MapEntry. The value is the found [Bind] and the key
+  /// is the [AutoInjectorImpl] that have this bind.
+  /// <br/><br/> **NOTE: Algorithm based on BFS (breadth-first search)**
+  MapEntry<AutoInjectorImpl, Bind>? getBindByKey(
+    AutoInjectorImpl startInjector, {
+    required String bindKey,
+  }) {
+    final injector = getFirstInjectorWhere(startInjector, (currentInjector) {
+      for (final Bind bind in currentInjector.binds) {
+        if (bind.key == bindKey) return true;
+      }
+      return false;
+    });
+    if (injector == null) return null;
+    final bind = injector.binds.firstWhere((bind) => bind.key == bindKey);
+    return MapEntry(injector, bind);
+  }
+
   /// Execute [callback] in all the injectors.
   /// <br/><br/> **NOTE: Algorithm based on BFS (breadth-first search)**
   void executeInAllInjectors<T>(

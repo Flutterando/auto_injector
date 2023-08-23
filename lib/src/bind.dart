@@ -31,9 +31,10 @@ class Bind<T> {
   final Function constructor;
   final BindType type;
   final List<Param> params;
-  final String className;
+  final String? className;
   final T? instance;
   final BindConfig<T>? config;
+  final String? key;
 
   bool get hasInstance => instance != null;
 
@@ -42,24 +43,27 @@ class Bind<T> {
     required BindType type,
     BindConfig<T>? config,
     T? instance,
+    String? key,
   }) {
     final constructorString = constructor.runtimeType.toString();
     final constructorListString = constructorString.split(' ');
     final paramsString = constructorListString[0];
-    final classNameString = constructorListString.last;
+    final classNameString = _resolveClassName<T>(constructorString);
+
     if (paramsString == '()') {
       return Bind<T>._(
         constructor: constructor,
-        className: classNameString,
+        className: (key != null) ? null : classNameString,
         params: [],
         type: type,
         config: config,
         instance: instance,
+        key: key,
       );
     }
 
     final classData = constructor.reflection();
-    final className = classData.className;
+    final className = _resolveClassName<T>(classData.className);
 
     final params = [
       ...classData.namedParams.map(
@@ -88,11 +92,12 @@ class Bind<T> {
 
     return Bind<T>._(
       constructor: constructor,
-      className: className,
+      className: (key != null) ? null : className,
       params: params,
       type: type,
       config: config,
       instance: instance,
+      key: key,
     );
   }
 
@@ -122,9 +127,10 @@ class Bind<T> {
     required this.constructor,
     required this.type,
     required this.params,
-    required this.className,
+    this.className,
     this.config,
     this.instance,
+    this.key,
   });
 
   Bind<T> withoutInstance() {
@@ -134,6 +140,7 @@ class Bind<T> {
       params: params,
       className: className,
       config: config,
+      key: key,
     );
   }
 
@@ -145,6 +152,16 @@ class Bind<T> {
       className: className,
       instance: instance,
       config: config,
+      key: key,
     );
+  }
+
+  static String _resolveClassName<T>(String constructorString) {
+    final typeName = T.toString();
+    final isDynamicOrObjectType = ['dynamic', 'Object'].contains(typeName);
+    if (!isDynamicOrObjectType) return typeName;
+
+    final className = constructorString.split(' => ').last;
+    return className;
   }
 }
