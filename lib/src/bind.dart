@@ -45,23 +45,6 @@ class Bind<T> {
     T? instance,
     String? key,
   }) {
-    final constructorString = constructor.runtimeType.toString();
-    final constructorListString = constructorString.split(' ');
-    final paramsString = constructorListString[0];
-    final classNameString = _resolveClassName<T>(constructorString);
-
-    if (paramsString == '()') {
-      return Bind<T>._(
-        constructor: constructor,
-        className: key ?? classNameString,
-        params: [],
-        type: type,
-        config: config,
-        instance: instance,
-        key: key,
-      );
-    }
-
     final classData = constructor.reflection();
     final className = _resolveClassName<T>(classData.className);
 
