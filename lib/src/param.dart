@@ -1,4 +1,5 @@
-// ignore_for_file: public_member_api_docs, sort_constructors_first
+// ignore_for_file: public_member_api_docs
+
 import 'package:meta/meta.dart';
 
 typedef ParamTransform = Param? Function(Param param);
@@ -62,6 +63,7 @@ class NamedParam extends Param {
 class PositionalParam extends Param {
   PositionalParam({
     required super.className,
+    required super.isRequired,
     super.value,
     super.isNullable = false,
   });
@@ -72,6 +74,7 @@ class PositionalParam extends Param {
       className: className,
       isNullable: isNullable,
       value: value,
+      isRequired: isRequired,
     );
   }
 }
