@@ -181,6 +181,15 @@ class Datasource {}
 
 ```
 
+Register instances with Key:
+
+```dart
+
+autoInjector.add(Controller.new, key: 'MyCustomName');
+
+```
+
+
 Get instance:
 
 ```dart
@@ -191,6 +200,14 @@ Get instance:
   // or use calleble function (withless .get())
   final datasource = autoInjector<Datasource>();
   print(datasource); // Instance of 'Datasource'.
+```
+
+Get instance by key
+
+```dart
+  // fetch
+  final controller = autoInjector.get<Controller>(key: 'CustomController');
+  print(controller); // Instance of 'Controller'.
 ```
 
 Try get instance:

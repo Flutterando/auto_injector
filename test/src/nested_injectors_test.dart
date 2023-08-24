@@ -216,8 +216,7 @@ void main() {
 
         expect(parentInjector.layersGraph.adjacencyList[innerInjector], null);
         expect(
-          parentInjector.layersGraph.adjacencyList[parentInjector]
-              ?.contains(innerInjector),
+          parentInjector.layersGraph.adjacencyList[parentInjector]?.contains(innerInjector),
           false,
         );
         expect(innerInjector.binds.isEmpty, true);
@@ -239,8 +238,7 @@ void main() {
 
         expect(parentInjector.layersGraph.adjacencyList[innerInjector], null);
         expect(
-          parentInjector.layersGraph.adjacencyList[parentInjector]
-              ?.contains(innerInjector),
+          parentInjector.layersGraph.adjacencyList[parentInjector]?.contains(innerInjector),
           false,
         );
         expect(innerInjector.binds.isEmpty, true);

@@ -1,7 +1,9 @@
-## 1.2.0 (2023-08-09)
+## 2.0.0 (2023-08-24)
 
 - fix: replace with others tags
-- add: Tags getter
+- fix: Custom split to generics datas in many levels (thanks @luanbatistadev)
+- add: Multi Injector (thanks @davidsdearaujo).
+- add: Get and register instances by name (thanks toshi @toshiossada).
 
 ## 1.1.1 (2023-08-05)
 
@@ -11,7 +13,6 @@
 
 - add: BindConfig
 - chore: Update Exceptions
-
 
 ## 1.0.5+2 (2023-07-30)
 
