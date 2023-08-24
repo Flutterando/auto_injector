@@ -16,29 +16,39 @@ typedef VoidCallback = void Function();
 abstract class Injector {
   /// Request an instance by [Type]
   /// <br>
-  /// [transform]: Transform a param. This can be used for example
+  /// [transform] : Transform a param. This can be used for example
   /// to replace an instance with a mock in tests.
-  T get<T>({ParamTransform? transform});
+  /// <br>
+  /// When [key] is provided it will search the instance that have the same key
+  T get<T>({ParamTransform? transform, String? key});
 
   /// Request an instance by [Type]
   /// <br>
   /// [transform]: Transform a param. This can be used for example
   /// to replace an instance with a mock in tests.
-  T call<T>({ParamTransform? transform}) => get<T>(transform: transform);
+  /// <br>
+  /// When [key] is provided it will search the instance that have the same key
+  T call<T>({ParamTransform? transform, String? key}) {
+    return get<T>(transform: transform, key: key);
+  }
 
   /// Register a factory instance.
   /// A new instance will be generated whenever requested.
   /// ```dart
   /// injector.add(MyController.new);
   /// ```
-  void add<T>(Function constructor, {BindConfig<T>? config});
+  /// <br>
+  /// When [key] is provided this instance only can be found by key
+  void add<T>(Function constructor, {BindConfig<T>? config, String? key});
 
   /// Register a instance.
   /// A concrete object (Not a function).
   /// ```dart
   /// injector.addInstance(MyController());
   /// ```
-  void addInstance<T>(T instance, {BindConfig<T>? config});
+  /// <br>
+  /// When [key] is provided this instance only can be found by key
+  void addInstance<T>(T instance, {BindConfig<T>? config, String? key});
 
   /// Register a Singleton instance.
   /// It will generate a single instance for the duration of
@@ -47,7 +57,13 @@ abstract class Injector {
   /// ```dart
   /// injector.addSingleton(MyController.new);
   /// ```
-  void addSingleton<T>(Function constructor, {BindConfig<T>? config});
+  /// <br>
+  /// When [key] is provided this instance only can be found by key
+  void addSingleton<T>(
+    Function constructor, {
+    BindConfig<T>? config,
+    String? key,
+  });
 
   /// Register a LazySingleton instance.
   /// It will generate a single instance for the duration of
@@ -56,10 +72,18 @@ abstract class Injector {
   /// ```dart
   /// injector.addLazySingleton(MyController.new);
   /// ```
-  void addLazySingleton<T>(Function constructor, {BindConfig<T>? config});
+  /// <br>
+  /// When [key] is provided this instance only can be found by key
+  void addLazySingleton<T>(
+    Function constructor, {
+    BindConfig<T>? config,
+    String? key,
+  });
 
   /// Request an notifier property by [Type]
-  dynamic getNotifier<T>();
+  /// <br>
+  /// When [key] is provided it will search the instance that have the same key
+  dynamic getNotifier<T>({String? key});
 }
 
 /// Automatic Dependency Injection System, but without build_runner :)
@@ -120,7 +144,9 @@ abstract class AutoInjector extends Injector {
   /// <br>
   /// [transform]: Transform a param. This can be used for example
   /// to replace an instance with a mock in tests.
-  T? tryGet<T>({ParamTransform? transform});
+  /// <br>
+  /// When [key] is provided it will search the instance that have the same key
+  T? tryGet<T>({ParamTransform? transform, String? key});
 
   /// Inherit all instances and transforms from other AutoInjector object.
   /// ```dart
@@ -132,19 +158,27 @@ abstract class AutoInjector extends Injector {
   void addInjector(AutoInjector injector);
 
   /// Checks if the instance record exists.
-  bool isAdded<T>();
+  /// <br>
+  /// When [key] is provided it will search the instance that have the same key
+  bool isAdded<T>({String? key});
 
   /// checks if the instance registration is as singleton.
-  bool isInstantiateSingleton<T>();
+  /// <br>
+  /// When [key] is provided it will search the instance that have the same key
+  bool isInstantiateSingleton<T>({String? key});
 
   /// Removes the singleton instance.<br>
   /// This does not remove it from the registry tree.
-  T? disposeSingleton<T>();
+  /// <br>
+  /// When [key] is provided it will search the instance that have the same key
+  T? disposeSingleton<T>({String? key});
 
   /// Replaces an instance record with a concrete instance.<br>
   /// This function should only be used for unit testing.<br>
   /// Any other use is discouraged.
-  void replaceInstance<T>(T instance);
+  /// <br>
+  /// When [key] is provided it will search the instance that have the same key
+  void replaceInstance<T>(T instance, {String? key});
 
   /// Informs the container that the additions
   /// are finished and the injector is ready to be used.<br>
@@ -199,70 +233,102 @@ class AutoInjectorImpl extends AutoInjector {
   }
 
   @override
-  T get<T>({ParamTransform? transform}) {
+  T get<T>({ParamTransform? transform, String? key}) {
     _checkAutoInjectorIsCommitted();
 
     try {
       final className = T.toString();
-      final instance = _resolveInstanceByClassName(className, transform);
+      T? instance;
 
-      if (instance == null) {
-        throw UnregisteredInstance([className], '$className unregistered.');
+      if (key == null) {
+        instance = _resolveInstanceByClassName(className, transform);
+        if (instance == null) {
+          throw UnregisteredInstance([className], '$className unregistered.');
+        }
+      } else {
+        instance = _resolveInstanceByKey(key, transform);
+        if (instance == null) {
+          throw UnregisteredInstanceByKey([key], '$key unregistered.');
+        }
       }
-
       return instance;
     } on UnregisteredInstance catch (exception) {
-      throw _prepareExceptionTrace(exception);
+      final trace = exception.classNames.join('->');
+      var message = exception.message;
+      if (exception.classNames.length > 1) {
+        message = '$message\nTrace: $trace';
+      }
+      throw UnregisteredInstance(exception.classNames, message);
+    } on UnregisteredInstanceByKey catch (exception) {
+      final trace = exception.keys.join('->');
+      var message = exception.message;
+      if (exception.keys.length > 1) {
+        message = '$message\nTrace: $trace';
+      }
+      throw UnregisteredInstance(exception.keys, message);
     }
   }
 
   @override
-  T? tryGet<T>({ParamTransform? transform}) {
+  T? tryGet<T>({ParamTransform? transform, String? key}) {
     try {
-      return get<T>(transform: transform);
+      return get<T>(transform: transform, key: key);
     } catch (e) {
       return null;
     }
   }
 
   @override
-  dynamic getNotifier<T>() {
+  dynamic getNotifier<T>({String? key}) {
     final className = T.toString();
-    final data = layersGraph.getBindByClassName(this, className: className);
+    final data = (key == null)
+        ? layersGraph.getBindByClassName(this, className: className)
+        : layersGraph.getBindByKey(this, bindKey: key);
     final bind = data?.value;
     return bind?.getNotifier();
   }
 
   @override
-  void add<T>(Function constructor, {BindConfig<T>? config}) {
-    _add<T>(constructor, config: config);
+  void add<T>(Function constructor, {BindConfig<T>? config, String? key}) {
+    _add<T>(constructor, config: config, key: key);
   }
 
   @override
-  void addInstance<T>(T instance, {BindConfig<T>? config}) {
+  void addInstance<T>(T instance, {BindConfig<T>? config, String? key}) {
     _add<T>(
       () => instance,
       type: BindType.instance,
       instance: instance,
       config: config,
+      key: key,
     );
   }
 
   @override
-  void addSingleton<T>(Function constructor, {BindConfig<T>? config}) {
+  void addSingleton<T>(
+    Function constructor, {
+    BindConfig<T>? config,
+    String? key,
+  }) {
     _add<T>(
       constructor,
       type: BindType.singleton,
       config: config,
+      key: key,
     );
   }
 
   @override
-  void addLazySingleton<T>(Function constructor, {BindConfig<T>? config}) =>
+  void addLazySingleton<T>(
+    Function constructor, {
+    BindConfig<T>? config,
+    String? key,
+  }) =>
       _add<T>(
         constructor,
         type: BindType.lazySingleton,
         config: config,
+        key: key,
       );
 
   @override
@@ -271,26 +337,35 @@ class AutoInjectorImpl extends AutoInjector {
   }
 
   @override
-  bool isAdded<T>() => _hasBindByClassName(T.toString());
+  bool isAdded<T>({String? key}) => (key == null) //
+      ? _hasBindByClassName(T.toString())
+      : _hasBindByKey(key);
 
   @override
-  bool isInstantiateSingleton<T>() {
+  bool isInstantiateSingleton<T>({String? key}) {
     final className = T.toString();
-    final data = layersGraph.getBindByClassName(this, className: className);
+    final data = (key == null)
+        ? layersGraph.getBindByClassName(this, className: className)
+        : layersGraph.getBindByKey(this, bindKey: key);
     final bind = data?.value;
     return bind?.hasInstance ?? false;
   }
 
   @override
-  T? disposeSingleton<T>() {
-    return _disposeSingletonByClasseName(T.toString()) as T?;
+  T? disposeSingleton<T>({String? key}) {
+    final response = (key == null)
+        ? _disposeSingletonByClasseName(T.toString())
+        : _disposeSingletonByKey(key);
+    return response as T?;
   }
 
   @override
-  void replaceInstance<T>(T instance) {
+  void replaceInstance<T>(T instance, {String? key}) {
     final className = T.toString();
 
-    final data = layersGraph.getBindByClassName(this, className: className);
+    final data = (key == null)
+        ? layersGraph.getBindByClassName(this, className: className)
+        : layersGraph.getBindByKey(this, bindKey: key);
     if (data == null) {
       throw AutoInjectorException(
         '$className cannot be replaced because it was not added before.',
@@ -299,13 +374,15 @@ class AutoInjectorImpl extends AutoInjector {
     }
     final injector = data.key;
 
-    final index = injector.binds //
-        .indexWhere((bind) => bind.className == className);
+    final index = (key == null)
+        ? injector.binds.indexWhere((bind) => bind.className == className)
+        : injector.binds.indexWhere((bind) => bind.key == key);
 
     final newBind = Bind<T>(
       constructor: () => instance,
       type: BindType.instance,
       instance: instance,
+      key: key,
     );
 
     injector.binds[index] = newBind;
@@ -328,10 +405,18 @@ class AutoInjectorImpl extends AutoInjector {
   }
 
   void startSingletons() {
-    binds //
-        .where((bind) => bind.type == BindType.singleton)
-        .map((bind) => bind.className)
+    final singletonBinds =
+        binds.where((bind) => bind.type == BindType.singleton);
+
+    singletonBinds
+        .where((bind) => bind.className != null)
+        .map((bind) => bind.className!)
         .forEach(_resolveInstanceByClassName);
+
+    singletonBinds
+        .where((bind) => bind.key != null)
+        .map((bind) => bind.key!)
+        .forEach(_resolveInstanceByKey);
   }
 
   @override
@@ -384,20 +469,34 @@ It is recommended to call the "commit()" method after adding instances.'''
     disposeListeners.remove(callback);
   }
 
-  UnregisteredInstance _prepareExceptionTrace(UnregisteredInstance exception) {
-    final trace = exception.classNames.join('->');
-    var message = exception.message;
-    if (exception.classNames.length > 1) {
-      message = '$message\nTrace: $trace';
-    }
-    return UnregisteredInstance(exception.classNames, message);
-  }
-
   dynamic _resolveInstanceByClassName(
     String className, [
     ParamTransform? transform,
   ]) {
     final data = layersGraph.getBindByClassName(this, className: className);
+    if (data == null) return null;
+
+    final injectorOwner = data.key;
+    final bind = data.value;
+
+    if (bind.hasInstance) {
+      return bind.instance;
+    }
+
+    final bindWithInstance = injectorOwner._resolveBind(bind, transform);
+
+    if (bindWithInstance.type.isSingleton) {
+      injectorOwner._updateBinds(bindWithInstance);
+    }
+
+    return bindWithInstance.instance;
+  }
+
+  dynamic _resolveInstanceByKey(
+    String key, [
+    ParamTransform? transform,
+  ]) {
+    final data = layersGraph.getBindByKey(this, bindKey: key);
     if (data == null) return null;
 
     final injectorOwner = data.key;
@@ -425,7 +524,7 @@ It is recommended to call the "commit()" method after adding instances.'''
     try {
       params = _resolveParam(bind.params, transform);
     } on UnregisteredInstance catch (e) {
-      final classNames = [bind.className, ...e.classNames];
+      final classNames = [bind.className ?? bind.key!, ...e.classNames];
       throw UnregisteredInstance(classNames, e.message);
     }
 
@@ -498,12 +597,14 @@ It is recommended to call the "commit()" method after adding instances.'''
     BindType type = BindType.factory,
     T? instance,
     BindConfig<T>? config,
+    String? key,
   }) {
     assert(
       config == null ||
+          key != null ||
           !['dynamic', 'Object', 'Object?'] //
               .contains(T.toString()),
-      'Added generic value in register. ex\n'
+      'Added generic value in register. Try something like this:\n'
       'injector.add<MyClasse>(MyClasse)',
     );
     if (committed) {
@@ -520,12 +621,12 @@ Injector committed!\nCannot add new instances, however can still use replace met
       type: type,
       config: config,
       instance: instance,
+      key: key,
     );
 
-    final bindData = layersGraph.getBindByClassName(
-      this,
-      className: bind.className,
-    );
+    final bindData = (key == null)
+        ? layersGraph.getBindByClassName(this, className: bind.className!)
+        : layersGraph.getBindByKey(this, bindKey: key);
     final hasBind = bindData != null;
     if (hasBind) {
       final injectorOwnsBind = bindData.key;
@@ -543,6 +644,11 @@ Injector committed!\nCannot add new instances, however can still use replace met
     return data != null;
   }
 
+  bool _hasBindByKey(String key) {
+    final data = layersGraph.getBindByKey(this, bindKey: key);
+    return data != null;
+  }
+
   dynamic _disposeSingletonByClasseName(String className) {
     final data = layersGraph.getBindByClassName(this, className: className);
     if (data == null) return null;
@@ -554,6 +660,21 @@ Injector committed!\nCannot add new instances, however can still use replace met
     final injectorOwnsBind = data.key;
     final indexBind = injectorOwnsBind.binds
         .indexWhere((bind) => bind.className == className);
+    injectorOwnsBind.binds[indexBind] = bind.withoutInstance();
+    return bind.instance;
+  }
+
+  dynamic _disposeSingletonByKey(String key) {
+    final data = layersGraph.getBindByKey(this, bindKey: key);
+    if (data == null) return null;
+
+    final bind = data.value;
+    if (!bind.hasInstance) return null;
+
+    bind.callDispose();
+    final injectorOwnsBind = data.key;
+    final indexBind =
+        injectorOwnsBind.binds.indexWhere((bind) => bind.key == key);
     injectorOwnsBind.binds[indexBind] = bind.withoutInstance();
     return bind.instance;
   }

@@ -11,7 +11,7 @@ void main() {
 
   test('AutoInjector: add', () async {
     expect(injector.isAdded<TestDatasource>(), false);
-    injector.add(TestDatasource.new);
+    injector.add<TestDatasource>(TestDatasource.new);
     injector.commit();
 
     expect(injector.isAdded<TestDatasource>(), true);
@@ -418,7 +418,6 @@ class TestComplexNamed {
 
   TestComplexNamed({this.value, this.map});
 }
-
 
 class TestDatasource {}
 
