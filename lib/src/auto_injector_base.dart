@@ -189,13 +189,13 @@ abstract class AutoInjector extends Injector {
   void uncommit();
 
   /// Remove all the binds and turns the injector uncommitted
-  void dispose();
+  void dispose([void Function(dynamic instance)? instanceCallback]);
 
   /// Execute "dispose()" in all the injectors from this layers tree
   void disposeRecursive();
 
   /// Find the injector by [injectorTag] in the layers tree and execute "dispose()" on it
-  void disposeInjectorByTag(String injectorTag);
+  void disposeInjectorByTag(String injectorTag, [void Function(dynamic instance)? instanceCallback]);
 
   /// Run the [callback] when method [dispose] is called. <br/>
   /// All the dispose callbacks are called before the injector is disposed.
@@ -281,9 +281,7 @@ class AutoInjectorImpl extends AutoInjector {
   @override
   dynamic getNotifier<T>({String? key}) {
     final className = T.toString();
-    final data = (key == null)
-        ? layersGraph.getBindByClassName(this, className: className)
-        : layersGraph.getBindByKey(this, bindKey: key);
+    final data = (key == null) ? layersGraph.getBindByClassName(this, className: className) : layersGraph.getBindByKey(this, bindKey: key);
     final bind = data?.value;
     return bind?.getNotifier();
   }
@@ -344,18 +342,14 @@ class AutoInjectorImpl extends AutoInjector {
   @override
   bool isInstantiateSingleton<T>({String? key}) {
     final className = T.toString();
-    final data = (key == null)
-        ? layersGraph.getBindByClassName(this, className: className)
-        : layersGraph.getBindByKey(this, bindKey: key);
+    final data = (key == null) ? layersGraph.getBindByClassName(this, className: className) : layersGraph.getBindByKey(this, bindKey: key);
     final bind = data?.value;
     return bind?.hasInstance ?? false;
   }
 
   @override
   T? disposeSingleton<T>({String? key}) {
-    final response = (key == null)
-        ? _disposeSingletonByClasseName(T.toString())
-        : _disposeSingletonByKey(key);
+    final response = (key == null) ? _disposeSingletonByClasseName(T.toString()) : _disposeSingletonByKey(key);
     return response as T?;
   }
 
@@ -363,9 +357,7 @@ class AutoInjectorImpl extends AutoInjector {
   void replaceInstance<T>(T instance, {String? key}) {
     final className = T.toString();
 
-    final data = (key == null)
-        ? layersGraph.getBindByClassName(this, className: className)
-        : layersGraph.getBindByKey(this, bindKey: key);
+    final data = (key == null) ? layersGraph.getBindByClassName(this, className: className) : layersGraph.getBindByKey(this, bindKey: key);
     if (data == null) {
       throw AutoInjectorException(
         '$className cannot be replaced because it was not added before.',
@@ -374,9 +366,7 @@ class AutoInjectorImpl extends AutoInjector {
     }
     final injector = data.key;
 
-    final index = (key == null)
-        ? injector.binds.indexWhere((bind) => bind.className == className)
-        : injector.binds.indexWhere((bind) => bind.key == key);
+    final index = (key == null) ? injector.binds.indexWhere((bind) => bind.className == className) : injector.binds.indexWhere((bind) => bind.key == key);
 
     final newBind = Bind<T>(
       constructor: () => instance,
@@ -405,18 +395,11 @@ class AutoInjectorImpl extends AutoInjector {
   }
 
   void startSingletons() {
-    final singletonBinds =
-        binds.where((bind) => bind.type == BindType.singleton);
+    final singletonBinds = binds.where((bind) => bind.type == BindType.singleton);
 
-    singletonBinds
-        .where((bind) => bind.className != null)
-        .map((bind) => bind.className!)
-        .forEach(_resolveInstanceByClassName);
+    singletonBinds.where((bind) => bind.className != null).map((bind) => bind.className!).forEach(_resolveInstanceByClassName);
 
-    singletonBinds
-        .where((bind) => bind.key != null)
-        .map((bind) => bind.key!)
-        .forEach(_resolveInstanceByKey);
+    singletonBinds.where((bind) => bind.key != null).map((bind) => bind.key!).forEach(_resolveInstanceByKey);
   }
 
   @override
@@ -433,11 +416,15 @@ It is recommended to call the "commit()" method after adding instances.'''
   }
 
   @override
-  void dispose() {
+  void dispose([void Function(dynamic instance)? instanceCallback]) {
     for (final disposer in disposeListeners) {
       disposer.call();
     }
     disposeListeners.clear();
+    for (final bind in binds.where((b) => b.instance != null)) {
+      instanceCallback?.call(bind);
+      bind.callDispose();
+    }
     binds.clear();
     layersGraph.reset();
     committed = false;
@@ -453,9 +440,9 @@ It is recommended to call the "commit()" method after adding instances.'''
   }
 
   @override
-  void disposeInjectorByTag(String injectorTag) {
+  void disposeInjectorByTag(String injectorTag, [void Function(dynamic instance)? instanceCallback]) {
     layersGraph.executeInAllInjectors(this, (injector) {
-      if (injector._tag == injectorTag) injector.dispose();
+      if (injector._tag == injectorTag) injector.dispose(instanceCallback);
     });
   }
 
@@ -624,9 +611,7 @@ Injector committed!\nCannot add new instances, however can still use replace met
       key: key,
     );
 
-    final bindData = (key == null)
-        ? layersGraph.getBindByClassName(this, className: bind.className!)
-        : layersGraph.getBindByKey(this, bindKey: key);
+    final bindData = (key == null) ? layersGraph.getBindByClassName(this, className: bind.className!) : layersGraph.getBindByKey(this, bindKey: key);
     final hasBind = bindData != null;
     if (hasBind) {
       final injectorOwnsBind = bindData.key;
@@ -658,8 +643,7 @@ Injector committed!\nCannot add new instances, however can still use replace met
 
     bind.callDispose();
     final injectorOwnsBind = data.key;
-    final indexBind = injectorOwnsBind.binds
-        .indexWhere((bind) => bind.className == className);
+    final indexBind = injectorOwnsBind.binds.indexWhere((bind) => bind.className == className);
     injectorOwnsBind.binds[indexBind] = bind.withoutInstance();
     return bind.instance;
   }
@@ -673,8 +657,7 @@ Injector committed!\nCannot add new instances, however can still use replace met
 
     bind.callDispose();
     final injectorOwnsBind = data.key;
-    final indexBind =
-        injectorOwnsBind.binds.indexWhere((bind) => bind.key == key);
+    final indexBind = injectorOwnsBind.binds.indexWhere((bind) => bind.key == key);
     injectorOwnsBind.binds[indexBind] = bind.withoutInstance();
     return bind.instance;
   }
