@@ -54,6 +54,7 @@ class UnregisteredInstance extends AutoInjectorException {
     return message;
   }
 
+  /// instance with stackTrace prints
   UnregisteredInstance withExceptionTrace() {
     final trace = classNames.join('->');
     var message = this.message;
@@ -69,7 +70,6 @@ class UnregisteredInstance extends AutoInjectorException {
 /// Store all parent classNames
 /// [message] : message of exception<br>
 /// [stackTrace] : traces of exception<br>
-/// [classNames] : all parent class names
 class UnregisteredInstanceByKey extends AutoInjectorException {
   /// all parent class names;
   final List<String> keys;
@@ -117,8 +117,8 @@ class InjectorAlreadyCommited extends AutoInjectorException {
 
   @override
   String toString() {
-    var message =
-        '$_typeName: ${this.message}\nAutoInjector(tag: $injectorTag)';
+    var message = '$_typeName: ${this.message}'
+        '\nAutoInjector(tag: $injectorTag)';
     if (stackTrace != null) {
       message = '$message\n$stackTrace';
     }

@@ -183,7 +183,10 @@ class Bind<T> {
 
     if (allArgs.isNotEmpty) {
       final paramList = _customSplit(allArgs);
-      final allParam = paramList.map((e) => e.trim()).where((e) => e.isNotEmpty).map((e) {
+      final allParam = paramList //
+          .map((e) => e.trim())
+          .where((e) => e.isNotEmpty)
+          .map((e) {
         return PositionalParam(
           className: e.replaceFirst('?', ''),
           isNullable: e.endsWith('?'),
