@@ -1,5 +1,6 @@
-## 2.0.1 (2023-09-01)
+## 2.0.2 (2023-09-01)
 - fix: Remove `fake_reflection`
+- fix: dispose callback
 
 ## 2.0.0 (2023-08-24)
 
