@@ -1,3 +1,6 @@
+## 2.0.3
+- pump encrypt version
+
 ## 2.0.2 (2023-09-01)
 - fix: Remove `fake_reflection`
 - fix: dispose callback
