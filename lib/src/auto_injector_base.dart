@@ -422,7 +422,7 @@ It is recommended to call the "commit()" method after adding instances.'''
     }
     disposeListeners.clear();
     for (final bind in binds.where((b) => b.instance != null)) {
-      instanceCallback?.call(bind);
+      instanceCallback?.call(bind.instance);
       bind.callDispose();
     }
     binds.clear();
