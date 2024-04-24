@@ -20,7 +20,7 @@ abstract class Injector {
   /// to replace an instance with a mock in tests.
   /// <br>
   /// When [key] is provided it will search the instance that have the same key
-  T get<T>({ParamTransform? transform, String? key});
+  T get<T>({ParamTransform? transform, String? key, String? className});
 
   /// Request an instance by [Type]
   /// <br>
@@ -28,8 +28,8 @@ abstract class Injector {
   /// to replace an instance with a mock in tests.
   /// <br>
   /// When [key] is provided it will search the instance that have the same key
-  T call<T>({ParamTransform? transform, String? key}) {
-    return get<T>(transform: transform, key: key);
+  T call<T>({ParamTransform? transform, String? key, String? className}) {
+    return get<T>(transform: transform, key: key, className: className);
   }
 
   /// Register a factory instance.
@@ -146,7 +146,7 @@ abstract class AutoInjector extends Injector {
   /// to replace an instance with a mock in tests.
   /// <br>
   /// When [key] is provided it will search the instance that have the same key
-  T? tryGet<T>({ParamTransform? transform, String? key});
+  T? tryGet<T>({ParamTransform? transform, String? key, String? className});
 
   /// Inherit all instances and transforms from other AutoInjector object.
   /// ```dart
@@ -160,25 +160,25 @@ abstract class AutoInjector extends Injector {
   /// Checks if the instance record exists.
   /// <br>
   /// When [key] is provided it will search the instance that have the same key
-  bool isAdded<T>({String? key});
+  bool isAdded<T>({String? key, String? className});
 
   /// checks if the instance registration is as singleton.
   /// <br>
   /// When [key] is provided it will search the instance that have the same key
-  bool isInstantiateSingleton<T>({String? key});
+  bool isInstantiateSingleton<T>({String? key, String? className});
 
   /// Removes the singleton instance.<br>
   /// This does not remove it from the registry tree.
   /// <br>
   /// When [key] is provided it will search the instance that have the same key
-  T? disposeSingleton<T>({String? key});
+  T? disposeSingleton<T>({String? key, String? className});
 
   /// Replaces an instance record with a concrete instance.<br>
   /// This function should only be used for unit testing.<br>
   /// Any other use is discouraged.
   /// <br>
   /// When [key] is provided it will search the instance that have the same key
-  void replaceInstance<T>(T instance, {String? key});
+  void replaceInstance<T>(T instance, {String? key, String? className});
 
   /// Informs the container that the additions
   /// are finished and the injector is ready to be used.<br>
@@ -233,11 +233,11 @@ class AutoInjectorImpl extends AutoInjector {
   }
 
   @override
-  T get<T>({ParamTransform? transform, String? key}) {
+  T get<T>({ParamTransform? transform, String? key, String? className}) {
     _checkAutoInjectorIsCommitted();
 
     try {
-      final className = T.toString();
+      className ??= T.toString();
       T? instance;
 
       if (key == null) {
@@ -270,9 +270,9 @@ class AutoInjectorImpl extends AutoInjector {
   }
 
   @override
-  T? tryGet<T>({ParamTransform? transform, String? key}) {
+  T? tryGet<T>({ParamTransform? transform, String? key, String? className}) {
     try {
-      return get<T>(transform: transform, key: key);
+      return get<T>(transform: transform, key: key, className: className);
     } catch (e) {
       return null;
     }
@@ -335,27 +335,29 @@ class AutoInjectorImpl extends AutoInjector {
   }
 
   @override
-  bool isAdded<T>({String? key}) => (key == null) //
-      ? _hasBindByClassName(T.toString())
+  bool isAdded<T>({String? key, String? className}) => (key == null) //
+      ? _hasBindByClassName(className ?? T.toString())
       : _hasBindByKey(key);
 
   @override
-  bool isInstantiateSingleton<T>({String? key}) {
-    final className = T.toString();
+  bool isInstantiateSingleton<T>({String? key, String? className}) {
+    className ??= T.toString();
     final data = (key == null) ? layersGraph.getBindByClassName(this, className: className) : layersGraph.getBindByKey(this, bindKey: key);
     final bind = data?.value;
     return bind?.hasInstance ?? false;
   }
 
   @override
-  T? disposeSingleton<T>({String? key}) {
-    final response = (key == null) ? _disposeSingletonByClasseName(T.toString()) : _disposeSingletonByKey(key);
+  T? disposeSingleton<T>({String? key, String? className}) {
+    final response = (key == null)
+      ? _disposeSingletonByClasseName(className ?? T.toString())
+      : _disposeSingletonByKey(key);
     return response as T?;
   }
 
   @override
-  void replaceInstance<T>(T instance, {String? key}) {
-    final className = T.toString();
+  void replaceInstance<T>(T instance, {String? key, String? className}) {
+    className ??= T.toString();
 
     final data = (key == null) ? layersGraph.getBindByClassName(this, className: className) : layersGraph.getBindByKey(this, bindKey: key);
     if (data == null) {
