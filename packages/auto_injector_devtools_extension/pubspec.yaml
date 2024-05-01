@@ -1,0 +1,22 @@
+name: auto_injector_devtools_extension
+description: "A new Flutter project."
+publish_to: 'none' 
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.2.4 <4.0.0'
+dependencies:
+  flutter:
+    sdk: flutter
+  devtools_extensions: ^0.0.9
+  devtools_app_shared: ^0.0.9
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+  mocktail: ^1.0.3
+  vm_service: ^13.0.0
+
+flutter:
+  uses-material-design: true
