@@ -1,5 +1,7 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first, lines_longer_than_80_chars
 import 'dart:collection';
+import 'dart:convert';
+import 'dart:developer';
 
 import 'package:meta/meta.dart';
 import 'package:uuid/uuid.dart';
@@ -9,6 +11,8 @@ import 'exceptions/exceptions.dart';
 import 'param.dart';
 
 part 'layers_graph.dart';
+part 'dev_tools/auto_injector_dev_tools.dart';
+part 'dev_tools/extensions.dart';
 
 typedef VoidCallback = void Function();
 
@@ -208,6 +212,8 @@ abstract class AutoInjector extends Injector {
 }
 
 class AutoInjectorImpl extends AutoInjector {
+  final _devTools = AutoInjectorDevTools.create();
+
   @visibleForTesting
   final binds = <Bind>[];
 
@@ -230,6 +236,7 @@ class AutoInjectorImpl extends AutoInjector {
     void Function(AutoInjector injector)? on,
   ) : super._(tag, paramTransforms, on) {
     on?.call(this);
+    _devTools?.addInjector(this);
   }
 
   @override
@@ -474,6 +481,11 @@ It is recommended to call the "commit()" method after adding instances.'''
 
     if (bindWithInstance.type.isSingleton) {
       injectorOwner._updateBinds(bindWithInstance);
+    } else {
+      _devTools?.updateInstanceFactory(
+        injectorOwner,
+        bindWithInstance,
+      );
     }
 
     return bindWithInstance.instance;
