@@ -1,3 +1,6 @@
+## 2.0.5
+- Fix: replaceInstance now dont throw errors.
+
 ## 2.0.4
 - Fix: Instance callback on dispose (@thalissonmt)
 

@@ -49,8 +49,7 @@ void main() {
     expect(injector(key: mockKey), 'Test');
   });
 
-  test('AutoInjector: get instance without tag should throw an exception',
-      () async {
+  test('AutoInjector: get instance without tag should throw an exception', () async {
     injector.addInstance('Test', key: mockKey);
     injector.commit();
 
@@ -255,22 +254,6 @@ void main() {
       );
       expect(injector.get(key: mockKey), 'Changed');
     });
-
-    test('Throw AutoInjectorException when have no added before', () {
-      injector.commit();
-      expect(
-        () => injector.replaceInstance('Changed', key: mockKey),
-        throwsA(
-          const TypeMatcher<AutoInjectorException>().having(
-            (e) => e.message,
-            'message',
-            equals(
-              'String cannot be replaced because it was not added before.',
-            ),
-          ),
-        ),
-      );
-    });
   });
 
   group('ParamsTransform', () {
@@ -339,11 +322,7 @@ void main() {
 
       final dsChange = TestDatasource();
 
-      final datasourceChangedHash = injector
-          .get<TestController>(key: mockKey, transform: changeParam(dsChange))
-          .repository
-          .datasource
-          .hashCode;
+      final datasourceChangedHash = injector.get<TestController>(key: mockKey, transform: changeParam(dsChange)).repository.datasource.hashCode;
 
       expect(datasourceChangedHash != ds.hashCode, true);
       expect(datasourceChangedHash, dsChange.hashCode);

@@ -210,18 +210,13 @@ TestDatasource not registered.\nTrace: TestController->TestRepository->TestDatas
       injector.addInstance('Text');
       injector.commit();
       expect(injector.get<String>(), 'Text');
-
       injector.replaceInstance<String>('Changed');
-
       expect(injector.get<String>(), 'Changed');
     });
 
-    test('Throw AutoInjectorException when have no added before', () {
-      injector.commit();
-      expect(
-        () => injector.replaceInstance<String>('Changed'),
-        throwsA(isA<AutoInjectorException>()),
-      );
+    test('change not exist bind', () {
+      injector.replaceInstance<String>('Changed');
+      expect(injector.get<String>(), 'Changed');
     });
   });
 
