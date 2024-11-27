@@ -312,7 +312,6 @@ final homeModule = AutoInjector(
 
 ```
 
-<br>
 ### <div id="bind-config">BindConfig</div>
 
 If there is a need to configure the dispose and notifier of the bind,
