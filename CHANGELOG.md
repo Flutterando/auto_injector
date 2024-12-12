@@ -1,3 +1,6 @@
+## 2.0.6
+- Fix: class parse on wasm.
+
 ## 2.0.5
 - Fix: replaceInstance now dont throw errors.
 
