@@ -353,29 +353,32 @@ class AutoInjectorImpl extends AutoInjector {
     return response as T?;
   }
 
+  @visibleForTesting
   @override
   void replaceInstance<T>(T instance, {String? key}) {
-    final className = T.toString();
+    uncommit();
+    if (!isAdded<T>(key: key)) {
+      addInstance<T>(instance, key: key);
+    } else {
+      final className = T.toString();
 
-    final data = (key == null) ? layersGraph.getBindByClassName(this, className: className) : layersGraph.getBindByKey(this, bindKey: key);
-    if (data == null) {
-      throw AutoInjectorException(
-        '$className cannot be replaced because it was not added before.',
-        StackTrace.current,
+      final data = (key == null) ? layersGraph.getBindByClassName(this, className: className) : layersGraph.getBindByKey(this, bindKey: key);
+
+      final injector = data!.key;
+
+      final index = (key == null) ? injector.binds.indexWhere((bind) => bind.className == className) : injector.binds.indexWhere((bind) => bind.key == key);
+
+      final newBind = Bind<T>(
+        constructor: () => instance,
+        type: BindType.instance,
+        instance: instance,
+        key: key,
       );
+
+      injector.binds[index] = newBind;
     }
-    final injector = data.key;
 
-    final index = (key == null) ? injector.binds.indexWhere((bind) => bind.className == className) : injector.binds.indexWhere((bind) => bind.key == key);
-
-    final newBind = Bind<T>(
-      constructor: () => instance,
-      type: BindType.instance,
-      instance: instance,
-      key: key,
-    );
-
-    injector.binds[index] = newBind;
+    commit();
   }
 
   @override
@@ -422,7 +425,7 @@ It is recommended to call the "commit()" method after adding instances.'''
     }
     disposeListeners.clear();
     for (final bind in binds.where((b) => b.instance != null)) {
-      instanceCallback?.call(bind);
+      instanceCallback?.call(bind.instance);
       bind.callDispose();
     }
     binds.clear();
