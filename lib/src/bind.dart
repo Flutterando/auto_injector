@@ -1,6 +1,7 @@
 // ignore_for_file: public_member_api_docs
 
 import 'package:auto_injector/auto_injector.dart';
+import 'package:meta/meta.dart';
 
 enum BindType {
   instance,
@@ -44,6 +45,32 @@ class Bind<T> {
     String? key,
   }) {
     final constructorString = constructor.runtimeType.toString();
+    final className = _resolveClassName<T>(constructorString);
+    final params = _extractParams(constructorString);
+
+    return Bind<T>._(
+      constructor: constructor,
+      className: (key != null) ? null : className,
+      params: params,
+      type: type,
+      config: config,
+      instance: instance,
+      key: key,
+    );
+  }
+
+  /// This is used for testing different environments like wasm, js, macos, etc.
+  ///
+  /// It's not recommended to use this in production code.
+  @visibleForTesting
+  factory Bind.fromConstructorString({
+    required Function constructor,
+    required String constructorString,
+    required BindType type,
+    BindConfig<T>? config,
+    T? instance,
+    String? key,
+  }) {
     final className = _resolveClassName<T>(constructorString);
     final params = _extractParams(constructorString);
 
@@ -194,7 +221,7 @@ class Bind<T> {
         );
       }).toList();
 
-      params.addAll(allParam);
+      params.insertAll(0, allParam);
     }
 
     return params;
@@ -205,7 +232,17 @@ class Bind<T> {
     final isDynamicOrObjectType = ['dynamic', 'Object'].contains(typeName);
     if (!isDynamicOrObjectType) return typeName;
 
-    final className = constructorString.split(' => ').last;
-    return className;
+    final classNameRegex = RegExp(' => (.*) from: | => (.*) from | => (.*)');
+    final classNameMatch = classNameRegex.firstMatch(constructorString);
+    final className = classNameMatch?.group(1) ??
+        classNameMatch?.group(2) ??
+        classNameMatch?.group(3);
+    if (className == null) {
+      throw Exception(
+        'Unable to resolve class name from constructor: $constructorString',
+      );
+    }
+    // remove generics
+    return className.replaceAll(RegExp('<.*>'), '');
   }
 }
