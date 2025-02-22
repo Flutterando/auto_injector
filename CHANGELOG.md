@@ -1,3 +1,6 @@
+## 2.1.0
+- Add: `addBind` for complex registration.
+
 ## 2.0.5
 - Fix: replaceInstance now dont throw errors.
 

@@ -80,6 +80,8 @@ abstract class Injector {
     String? key,
   });
 
+  void addBind<T>(Bind<T> bind);
+
   /// Request an notifier property by [Type]
   /// <br>
   /// When [key] is provided it will search the instance that have the same key
@@ -459,6 +461,9 @@ It is recommended to call the "commit()" method after adding instances.'''
     disposeListeners.remove(callback);
   }
 
+  @override
+  void addBind<T>(Bind<T> bind) => _addBind<T>(bind);
+
   dynamic _resolveInstanceByClassName(
     String className, [
     ParamTransform? transform,
@@ -614,7 +619,11 @@ Injector committed!\nCannot add new instances, however can still use replace met
       key: key,
     );
 
-    final bindData = (key == null) ? layersGraph.getBindByClassName(this, className: bind.className!) : layersGraph.getBindByKey(this, bindKey: key);
+    _addBind<T>(bind);
+  }
+
+  void _addBind<T>(Bind<T> bind) {
+    final bindData = (bind.key == null) ? layersGraph.getBindByClassName(this, className: bind.className!) : layersGraph.getBindByKey(this, bindKey: bind.key!);
     final hasBind = bindData != null;
     if (hasBind) {
       final injectorOwnsBind = bindData.key;

@@ -58,6 +58,26 @@ class Bind<T> {
     );
   }
 
+  factory Bind.withClassName({
+    required Function constructor,
+    required BindType type,
+    required String className,
+    BindConfig<T>? config,
+    String? key,
+  }) {
+    final constructorString = constructor.runtimeType.toString();
+    final params = _extractParams(constructorString);
+
+    return Bind<T>._(
+      constructor: constructor,
+      className: className,
+      params: params,
+      type: type,
+      config: config,
+      key: key,
+    );
+  }
+
   factory Bind.empty(String className) {
     return Bind<T>._(
       constructor: () => null,
