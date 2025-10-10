@@ -1,3 +1,6 @@
+## 2.1.2
+- Fix: class parse on wasm.
+
 ## 2.1.1
 - Fix lints
 
