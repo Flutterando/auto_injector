@@ -49,7 +49,8 @@ void main() {
     expect(injector(key: mockKey), 'Test');
   });
 
-  test('AutoInjector: get instance without tag should throw an exception', () async {
+  test('AutoInjector: get instance without tag should throw an exception',
+      () async {
     injector.addInstance('Test', key: mockKey);
     injector.commit();
 
@@ -322,7 +323,11 @@ void main() {
 
       final dsChange = TestDatasource();
 
-      final datasourceChangedHash = injector.get<TestController>(key: mockKey, transform: changeParam(dsChange)).repository.datasource.hashCode;
+      final datasourceChangedHash = injector
+          .get<TestController>(key: mockKey, transform: changeParam(dsChange))
+          .repository
+          .datasource
+          .hashCode;
 
       expect(datasourceChangedHash != ds.hashCode, true);
       expect(datasourceChangedHash, dsChange.hashCode);

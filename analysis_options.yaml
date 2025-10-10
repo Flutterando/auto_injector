@@ -11,7 +11,7 @@
 # (the recommended set includes the core lints).
 # The core lints are also what is used by pub.dev for scoring packages.
 
-include: package:flutterando_analysis/dart_package.yaml
+include: package:lints/recommended.yaml
 
 # Uncomment the following section to specify additional rules.
 
@@ -19,7 +19,6 @@ linter:
   rules:
     cascade_invocations: false
     avoid_print: false
-
 # analyzer:
 #   exclude:
 #     - path/to/excluded/files/**

@@ -1,5 +1,11 @@
-## 2.0.6
+## 2.1.2
 - Fix: class parse on wasm.
+
+## 2.1.1
+- Fix lints
+
+## 2.1.0
+- Add: `addBind` for complex registration.
 
 ## 2.0.5
 - Fix: replaceInstance now dont throw errors.

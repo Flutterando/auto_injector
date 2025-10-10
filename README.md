@@ -106,11 +106,11 @@ Just create the class that will be injected and declare it within some of the av
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- SPONSORS -->
-<!-- For now FTeam is the only sponsor for Flutterando packages. The community is open to more support for it's open source endeavors, so check it out and make contact with us through the links provided at the end -->
+<!-- For now nZest is the only sponsor for Flutterando packages. The community is open to more support for it's open source endeavors, so check it out and make contact with us through the links provided at the end -->
 ## Sponsors
 
-<a href="https://fteam.dev">
-    <img src="https://raw.githubusercontent.com/Flutterando/README-Template/master/readme_assets/sponsor-logo.png" alt="Logo" width="120">
+<a href="https://www.nzest.co/">
+    <img src="https://cdn.discordapp.com/attachments/1305001560962633749/1349417507722625155/nZest-logo-2.png?ex=67d3067c&is=67d1b4fc&hm=a3c2c662c810458cff967656a5a02825d02d35a28887fb9c56c2476dca97d8ce&" alt="Logo" width="200">
   </a>
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>

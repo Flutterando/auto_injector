@@ -386,6 +386,20 @@ void main() {
       });
     });
   });
+
+  group('addBind', () {
+    test('should add a bind to the injector', () {
+      final bind = Bind.withClassName(
+        constructor: Class4Impl.new,
+        type: BindType.singleton,
+        className: 'InterfaceClass',
+      );
+      final injector = AutoInjector();
+      injector.addBind(bind);
+      injector.commit();
+      expect(injector.tryGet<InterfaceClass>(), isNotNull);
+    });
+  });
 }
 
 class Class1 {}
@@ -396,3 +410,7 @@ class Class2 {
 }
 
 class Class3 {}
+
+class Class4Impl implements InterfaceClass {}
+
+class InterfaceClass {}

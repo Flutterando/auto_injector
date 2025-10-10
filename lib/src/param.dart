@@ -44,8 +44,8 @@ class NamedParam extends Param {
     super.value,
     required this.named,
     super.isNullable = false,
-    bool isRequired = false,
-  }) : super(isRequired: isRequired);
+    super.isRequired = false,
+  });
 
   @override
   NamedParam setValue(dynamic value) {

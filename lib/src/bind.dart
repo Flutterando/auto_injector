@@ -58,7 +58,6 @@ class Bind<T> {
       key: key,
     );
   }
-
   /// This is used for testing different environments like wasm, js, macos, etc.
   ///
   /// It's not recommended to use this in production code.
@@ -81,6 +80,26 @@ class Bind<T> {
       type: type,
       config: config,
       instance: instance,
+      key: key,
+    );
+  }
+  
+  factory Bind.withClassName({
+    required Function constructor,
+    required BindType type,
+    required String className,
+    BindConfig<T>? config,
+    String? key,
+  }) {
+    final constructorString = constructor.runtimeType.toString();
+    final params = _extractParams(constructorString);
+
+    return Bind<T>._(
+      constructor: constructor,
+      className: className,
+      params: params,
+      type: type,
+      config: config,
       key: key,
     );
   }
