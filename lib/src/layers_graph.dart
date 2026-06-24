@@ -5,6 +5,14 @@ part of 'auto_injector_base.dart';
 class LayersGraph {
   final LinkedHashMap<AutoInjectorImpl, List<AutoInjectorImpl>> adjacencyList;
 
+  /// Dispose listeners this graph registered on inner injectors, kept so that
+  /// a re-[initialize] can de-register them first and stay idempotent.
+  /// Without this, every [AutoInjectorImpl.commit] (which re-runs [initialize])
+  /// would stack one more listener on each long-lived inner injector, leaking
+  /// closures that retain the inner, its parent and this [adjacencyList].
+  final _registeredDisposeListeners =
+      <MapEntry<AutoInjectorImpl, VoidCallback>>[];
+
   LayersGraph()
       : adjacencyList = LinkedHashMap(
           equals: (injector1, injector2) => injector1._tag == injector2._tag,
@@ -14,10 +22,15 @@ class LayersGraph {
 
   /// Fills the [adjacencyList] with this [injector] and its children tree.
   void initialize(AutoInjectorImpl injector) {
+    _clearDisposeListeners();
+    _initialize(injector);
+  }
+
+  void _initialize(AutoInjectorImpl injector) {
     _addInjector(injector);
     for (final innerInjector in injector.injectorsList) {
       _addEdge(injector, innerInjector);
-      initialize(innerInjector);
+      _initialize(innerInjector);
       _removeWhenDispose(
         innerInjector: innerInjector,
         parentInjector: injector,
@@ -25,18 +38,30 @@ class LayersGraph {
     }
   }
 
+  /// De-register every dispose listener previously added by this graph so a
+  /// re-[initialize] does not accumulate duplicates on surviving injectors.
+  void _clearDisposeListeners() {
+    for (final entry in _registeredDisposeListeners) {
+      entry.key.removeDisposeListener(entry.value);
+    }
+    _registeredDisposeListeners.clear();
+  }
+
   /// Listen the [innerInjector] to remove it from this [LayersGraph].
   void _removeWhenDispose({
     required AutoInjectorImpl parentInjector,
     required AutoInjectorImpl innerInjector,
   }) {
-    innerInjector.addDisposeListener(() {
+    void listener() {
       // Remove the adjacents of [innerInjector] on [adjacencyList]
       adjacencyList.remove(innerInjector);
 
       // Remove [innerInjector] from [parentInjector] on [adjacencyList]
       adjacencyList[parentInjector]?.remove(innerInjector);
-    });
+    }
+
+    _registeredDisposeListeners.add(MapEntry(innerInjector, listener));
+    innerInjector.addDisposeListener(listener);
   }
 
   /// Starts the [adjacencyList] for this [injector].<br/><br/>
@@ -141,6 +166,7 @@ class LayersGraph {
   }
 
   void reset() {
+    _clearDisposeListeners();
     adjacencyList.clear();
   }
 }

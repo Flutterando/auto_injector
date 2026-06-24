@@ -1,3 +1,7 @@
+## 2.2.0
+- Add: `addInjector(injector, resolveUpward: true)` lets a nested injector resolve the params of its own binds against an ancestor scope as a fallback (default `false` keeps the previous downward-only behavior). Local/downward binds always take precedence; mutual upward links throw `UpwardResolutionCycle`.
+- Fix: `LayersGraph` no longer leaks dispose listeners. Re-running `commit()` on a long-lived injector kept stacking one dispose listener per surviving inner injector on every commit; listener (re)registration is now idempotent.
+
 ## 2.1.1
 - Fix lints
 

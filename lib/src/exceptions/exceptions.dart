@@ -93,6 +93,37 @@ class UnregisteredInstanceByKey extends AutoInjectorException {
   }
 }
 
+/// AutoInjection Exception thrown when an `addInjector(..., resolveUpward: true)`
+/// edge would create a cycle in the upward (ancestor) resolution chain.
+/// <br>
+/// Upward resolution must form a tree: a child resolves against its ancestor as
+/// a fallback, never the other way around. A mutual upward link would make
+/// resolution recurse forever, so it is rejected eagerly at composition time.
+/// <br>
+/// [injectorTag] : tag of the injector at which the cycle was detected
+class UpwardResolutionCycle extends AutoInjectorException {
+  /// tag of the injector at which the cycle was detected
+  final String injectorTag;
+
+  /// AutoInjection Exception for an upward resolution cycle.
+  UpwardResolutionCycle(
+    this.injectorTag, [
+    super.message = '',
+    super.stackTrace,
+  ]);
+
+  @override
+  String toString() {
+    var message = '$_typeName: ${this.message}'
+        '\nupward resolution cycle detected at tag $injectorTag';
+    if (stackTrace != null) {
+      message = '$message\n$stackTrace';
+    }
+
+    return message;
+  }
+}
+
 /// AutoInjecton Exception for Injector Already Commited.
 /// <br>
 /// Store all parent classNames

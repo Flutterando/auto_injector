@@ -157,7 +157,18 @@ abstract class AutoInjector extends Injector {
   ///
   /// injector.addInjector(otherInjector);
   /// ```
-  void addInjector(AutoInjector injector);
+  /// <br>
+  /// By default resolution is downward only: the added [injector] resolves the
+  /// params of its binds against its own subtree, never against this ancestor.
+  /// Set [resolveUpward] to `true` to let the added [injector] also resolve
+  /// params against this ancestor (and its scope) as a fallback. Local/downward
+  /// binds always take precedence — the ancestor is only consulted when the bind
+  /// is not found in the added injector's own subtree.
+  /// <br>
+  /// The upward links must form a tree (a child points at its ancestor, never
+  /// the reverse). Adding an edge that would create a mutual upward link throws
+  /// an [UpwardResolutionCycle].
+  void addInjector(AutoInjector injector, {bool resolveUpward = false});
 
   /// Checks if the instance record exists.
   /// <br>
@@ -223,6 +234,12 @@ class AutoInjectorImpl extends AutoInjector {
   final layersGraph = LayersGraph();
 
   final disposeListeners = <VoidCallback>[];
+
+  /// Ancestor injector to resolve against as a fallback when a bind is not
+  /// found in this injector's own (downward) subtree. Set by the ancestor via
+  /// `addInjector(this, resolveUpward: true)`. `null` keeps the default
+  /// downward-only resolution.
+  AutoInjectorImpl? _upwardParent;
 
   @override
   int get bindLength => binds.length;
@@ -335,8 +352,34 @@ class AutoInjectorImpl extends AutoInjector {
       );
 
   @override
-  void addInjector(covariant AutoInjectorImpl injector) {
+  void addInjector(
+    covariant AutoInjectorImpl injector, {
+    bool resolveUpward = false,
+  }) {
+    if (resolveUpward) {
+      _assertNoUpwardCycle(injector);
+      injector._upwardParent = this;
+    }
     injectorsList.add(injector);
+  }
+
+  /// Guards the upward resolution chain against cycles. Setting
+  /// `injector._upwardParent = this` would close a loop if [injector] is
+  /// already reachable by walking up from this injector — that mutual link
+  /// would make resolution recurse forever, so it is rejected here.
+  void _assertNoUpwardCycle(AutoInjectorImpl injector) {
+    AutoInjectorImpl? ancestor = this;
+    while (ancestor != null) {
+      if (ancestor._tag == injector._tag) {
+        throw UpwardResolutionCycle(
+          injector._tag,
+          'Cannot add injector(tag: "${injector._tag}") with '
+          'resolveUpward: true: it is already an ancestor of '
+          'injector(tag: "$_tag"). Upward resolution must form a tree.',
+        );
+      }
+      ancestor = ancestor._upwardParent;
+    }
   }
 
   @override
@@ -488,7 +531,11 @@ It is recommended to call the "commit()" method after adding instances.'''
     ParamTransform? transform,
   ]) {
     final data = layersGraph.getBindByClassName(this, className: className);
-    if (data == null) return null;
+    if (data == null) {
+      // Local/downward lookup failed: fall back to the ancestor scope when this
+      // injector was added with `resolveUpward: true`. Downward always wins.
+      return _upwardParent?._resolveInstanceByClassName(className, transform);
+    }
 
     final injectorOwner = data.key;
     final bind = data.value;
@@ -511,7 +558,11 @@ It is recommended to call the "commit()" method after adding instances.'''
     ParamTransform? transform,
   ]) {
     final data = layersGraph.getBindByKey(this, bindKey: key);
-    if (data == null) return null;
+    if (data == null) {
+      // Local/downward lookup failed: fall back to the ancestor scope when this
+      // injector was added with `resolveUpward: true`. Downward always wins.
+      return _upwardParent?._resolveInstanceByKey(key, transform);
+    }
 
     final injectorOwner = data.key;
     final bind = data.value;
